@@ -1,5 +1,7 @@
 # Boids in Haskell
 
+http://www.red3d.com/cwr/boids/
+
 ## Usage
 
 ### NixOS

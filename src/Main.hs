@@ -1,7 +1,5 @@
 import Graphics.Gloss
 
--- main = display (InWindow "Nice Window" (800, 600) (10, 10)) white (Circle 80)
-
 type World = (Float, Float)
 
 initialState :: World

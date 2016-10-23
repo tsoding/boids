@@ -8,7 +8,7 @@ license-file:        LICENSE
 author:              Alexey Kutepov
 maintainer:          reximkut@gmail.com
 copyright:           2016 Alexey Kutepov
-category:            Web
+category:            Simulation
 build-type:          Simple
 cabal-version:       >=1.10
 

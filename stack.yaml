@@ -11,6 +11,7 @@ packages:
 extra-deps:
 - gloss-1.10.2.3
 - gloss-rendering-1.10.3.3
+- HUnit-approx-1.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

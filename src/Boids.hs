@@ -19,7 +19,7 @@ radsToDegrees :: Float -> Float
 radsToDegrees x = x * 180.0 / pi
 
 renderBoid :: Boid -> Picture
-renderBoid boid = translate x y $ rotate heading $ polygon ps
+renderBoid boid = translate x y $ rotate (-heading) $ polygon ps
     where ps = [ (-10.0, 10.0)
                , (20.0, 0.0)
                , (-10.0, -10.0)

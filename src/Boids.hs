@@ -8,6 +8,7 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
+import Utils (dosedLists)
 
 type World = [Boid]
 
@@ -15,15 +16,6 @@ data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
                  } deriving Show
-
--- dosedLists 2 [1..6] = [[1,2],[3,4],[5,6]]
--- dosedLists 3 [1..6] = [[1,2,3],[4,5,6]]
-dosedLists :: (Num a) => Int -> [a] -> [[a]]
-dosedLists doseSize list = dose list []
-  where dose list result
-          | length taken < doseSize = result
-          | otherwise = taken : dose (drop doseSize list) result
-            where taken = take doseSize list
 
 radsToDegrees :: Float -> Float
 radsToDegrees x = x * 180.0 / pi

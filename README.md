@@ -9,6 +9,6 @@ http://www.red3d.com/cwr/boids/
 ### NixOS
 
     $ nix-shell
-    $ stack build --extra-include-dirs=$NIX_USER_PROFILE_DIR/profile/include --extra-lib-dirs=$NIX_USER_PROFILE_DIR/profile/lib
+    $ stack build
     $ stack exec boids-exe
     $ stack test

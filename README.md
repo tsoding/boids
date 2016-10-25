@@ -4,6 +4,8 @@
 
 http://www.red3d.com/cwr/boids/
 
+![boids](http://i.imgur.com/hbhWCmq.png)
+
 ## Usage
 
 ### NixOS

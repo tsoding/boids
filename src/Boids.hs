@@ -1,4 +1,5 @@
 module Boids ( World
+             , Boid(..)
              , initialState
              , renderState
              , nextState
@@ -7,13 +8,15 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
+import System.Random
+import Control.Monad
 
 type World = [Boid]
 
 data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
-                 }
+                 } deriving Show
 
 radsToDegrees :: Float -> Float
 radsToDegrees x = x * 180.0 / pi
@@ -34,12 +37,17 @@ nextBoid deltaTime boid = boid {
     where (x, y) = boidPosition boid
           heading = boidHeading boid
 
-initialState :: World
-initialState = [ Boid { boidPosition = (0.0, 0.0)
-                      , boidHeading = 0.0
-                      , boidSteer = 0.0
-                      }
-               ]
+randomBoid :: IO Boid
+randomBoid = do x <- randomRIO (-100.0, 100.0)
+                y <- randomRIO (-100.0, 100.0)
+                heading <- randomRIO (0.0, 2 * pi)
+                return $ Boid { boidPosition = (x, y)
+                              , boidHeading = heading
+                              , boidSteer = 0.0
+                              }
+
+initialState :: IO World
+initialState = replicateM 100 randomBoid
 
 renderState :: World -> Picture
 renderState = pictures . map renderBoid

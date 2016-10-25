@@ -2,6 +2,8 @@ import System.Random (newStdGen, randomRs)
 import Graphics.Gloss
 import Boids
 
+import Utils (saltedRange)
+
 window = InWindow "Boids" (800, 600) (10, 10)
 
 main :: IO ()

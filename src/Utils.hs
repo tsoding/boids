@@ -1,4 +1,4 @@
-module Utils (dosedLists) where
+module Utils (dosedLists, saltedRange) where
 
 
 -- dosedLists 2 [1..6] = [[1,2],[3,4],[5,6]]
@@ -9,3 +9,7 @@ dosedLists doseSize list = dose list []
           | length taken < doseSize = result
           | otherwise = taken : dose (drop doseSize list) result
             where taken = take doseSize list
+
+
+saltedRange :: Float -> (Float, Float) -> Float
+saltedRange salt (from, to) = salt * (to - from) + from

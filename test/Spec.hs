@@ -1,5 +1,5 @@
 import Boids
-import Utils (dosedLists)
+import Utils (dosedLists, saltedRange)
 import Test.HUnit
 import Test.HUnit.Approx
 import System.Exit
@@ -22,6 +22,11 @@ testDosedLists = TestCase $ do
   assertEqual "Works well with infinite lists" [[1,2,3],[4,5,6],[7,8,9]]
                                                (take 3 $ dosedLists 3 [1..])
 
+testSaltedRange :: Test
+testSaltedRange = TestCase $ do
+  assertEqual "Middle" 30 (saltedRange 0.5 (20, 40))
+  assertEqual "Minimum" 20 (saltedRange 0 (20, 40))
+  assertEqual "Maximum" 40 (saltedRange 1 (20, 40))
 
 
 main :: IO Counts
@@ -31,4 +36,5 @@ main = do results <- runTestTT tests
           else exitWith (ExitFailure 1)
   where tests = TestList [ TestLabel "Test Radians to Degrees conversion" testRadsToDegrees
                          , TestLabel "Test dosedLists util function" testDosedLists
+                         , TestLabel "Test saltedRange util function" testSaltedRange
                          ]

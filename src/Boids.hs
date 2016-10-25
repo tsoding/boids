@@ -8,7 +8,7 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
-import Utils (dosedLists)
+import Utils (dosedLists, saltedRange)
 
 type World = [Boid]
 
@@ -37,14 +37,11 @@ nextBoid deltaTime boid = boid { boidPosition = (pos x cos, pos y sin) }
 
 randomBoid :: [Float] -> Boid
 randomBoid salts = Boid { boidPosition = (getPos s1, getPos s2)
-                        , boidHeading = range s2 (0, 2 * pi)
+                        , boidHeading = saltedRange s2 (0, 2 * pi)
                         , boidSteer = 0.0
                         }
   where [s1, s2, s3] = salts
-        range :: Float -> (Float, Float) -> Float
-        range s (from, to) = s * ((to + 1) - from) + from
-        getPos :: Float -> Float
-        getPos s = range s (-100, 100)
+        getPos s = saltedRange s (-100, 100)
 
 initialState :: Int -> [Float] -> World
 initialState boidsCount salts = [ randomBoid (dosedLists 3 salts !! i)

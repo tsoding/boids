@@ -37,7 +37,7 @@ nextBoid deltaTime boid = boid { boidPosition = (pos x cos, pos y sin) }
 
 randomBoid :: [Float] -> Boid
 randomBoid salts = Boid { boidPosition = (getPos s1, getPos s2)
-                        , boidHeading = saltedRange s2 (0, 2 * pi)
+                        , boidHeading = saltedRange s3 (0, 2 * pi)
                         , boidSteer = 0.0
                         }
   where [s1, s2, s3] = salts

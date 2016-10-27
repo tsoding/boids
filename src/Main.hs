@@ -4,7 +4,7 @@ import Boids
 
 window = InWindow "Boids" (800, 600) (10, 10)
 
-boidsCount = 100 :: Int
+boidsCount = 100
 
 main :: IO ()
 main = do gen <- newStdGen

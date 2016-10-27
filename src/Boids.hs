@@ -8,7 +8,7 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
-import Utils (dosedLists, saltedRange)
+import Utils (saltedRange)
 
 type World = [Boid]
 
@@ -30,22 +30,23 @@ renderBoid boid = translate x y $ rotate (-heading) $ polygon ps
           (x, y) = boidPosition boid
 
 nextBoid :: Float -> Boid -> Boid
-nextBoid deltaTime boid = boid { boidPosition = (pos x cos, pos y sin) }
+nextBoid deltaTime boid = boid { boidPosition = (nextPos x cos, nextPos y sin) }
     where (x, y) = boidPosition boid
           heading = boidHeading boid
-          pos axis f = axis + deltaTime * (f heading) * 100.0
+          nextPos axis f = axis + deltaTime * (f heading) * 100.0
 
-randomBoid :: [Float] -> Boid
+randomBoid :: (Float, Float, Float) -> Boid
 randomBoid salts = Boid { boidPosition = (getPos s1, getPos s2)
                         , boidHeading = saltedRange s3 (0, 2 * pi)
                         , boidSteer = 0.0
                         }
-  where [s1, s2, s3] = salts
+  where (s1, s2, s3) = salts
         getPos s = saltedRange s (-100, 100)
 
 initialState :: Int -> [Float] -> World
-initialState boidsCount salts = [ randomBoid (dosedLists 3 salts !! i)
-                                | i <- [0..boidsCount-1] ]
+initialState 0          _                = []
+initialState boidsCount (s1:s2:s3:salts) = randomBoid (s1, s2, s3)
+                                         : initialState (boidsCount - 1) salts
 
 renderState :: World -> Picture
 renderState = pictures . map renderBoid

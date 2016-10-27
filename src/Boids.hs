@@ -8,8 +8,7 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
-import System.Random
-import Control.Monad
+import Utils (projectToRange)
 
 type World = [Boid]
 
@@ -31,23 +30,23 @@ renderBoid boid = translate x y $ rotate (-heading) $ polygon ps
           (x, y) = boidPosition boid
 
 nextBoid :: Float -> Boid -> Boid
-nextBoid deltaTime boid = boid {
-                            boidPosition = (x + deltaTime * cos heading * 100.0, y + deltaTime * sin heading * 100.0)
-                          }
+nextBoid deltaTime boid = boid { boidPosition = (nextPos x cos, nextPos y sin) }
     where (x, y) = boidPosition boid
           heading = boidHeading boid
+          nextPos axis f = axis + deltaTime * (f heading) * 100.0
 
-randomBoid :: IO Boid
-randomBoid = do x <- randomRIO (-100.0, 100.0)
-                y <- randomRIO (-100.0, 100.0)
-                heading <- randomRIO (0.0, 2 * pi)
-                return $ Boid { boidPosition = (x, y)
-                              , boidHeading = heading
-                              , boidSteer = 0.0
-                              }
+randomBoid :: (Float, Float, Float) -> Boid
+randomBoid salts = Boid { boidPosition = (getPos s1, getPos s2)
+                        , boidHeading = projectToRange s3 (0, 2 * pi)
+                        , boidSteer = 0.0
+                        }
+  where (s1, s2, s3) = salts
+        getPos s = projectToRange s (-100, 100)
 
-initialState :: IO World
-initialState = replicateM 100 randomBoid
+initialState :: Int -> [Float] -> World
+initialState 0          _                = []
+initialState boidsCount (s1:s2:s3:salts) = randomBoid (s1, s2, s3)
+                                         : initialState (boidsCount - 1) salts
 
 renderState :: World -> Picture
 renderState = pictures . map renderBoid

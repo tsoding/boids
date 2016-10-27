@@ -1,5 +1,5 @@
 import Boids
-import Utils (saltedRange)
+import Utils (projectToRange)
 import Test.HUnit
 import Test.HUnit.Approx
 import System.Exit
@@ -11,9 +11,9 @@ testRadsToDegrees = TestCase (assertApproxEqual "Rads to Degrees" 1e-6 180.0 (ra
 
 testSaltedRange :: Test
 testSaltedRange = TestCase $ do
-  assertEqual "Middle" 30 (saltedRange 0.5 (20, 40))
-  assertEqual "Minimum" 20 (saltedRange 0 (20, 40))
-  assertEqual "Maximum" 40 (saltedRange 1 (20, 40))
+  assertEqual "Middle" 30 (projectToRange 0.5 (20, 40))
+  assertEqual "Minimum" 20 (projectToRange 0 (20, 40))
+  assertEqual "Maximum" 40 (projectToRange 1 (20, 40))
 
 
 main :: IO Counts
@@ -22,5 +22,5 @@ main = do results <- runTestTT tests
           then exitSuccess
           else exitFailure
   where tests = TestList [ TestLabel "Test Radians to Degrees conversion" testRadsToDegrees
-                         , TestLabel "Test saltedRange util function" testSaltedRange
+                         , TestLabel "Test projectToRange util function" testSaltedRange
                          ]

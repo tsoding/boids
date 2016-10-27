@@ -8,7 +8,7 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
-import Utils (saltedRange)
+import Utils (projectToRange)
 
 type World = [Boid]
 
@@ -37,11 +37,11 @@ nextBoid deltaTime boid = boid { boidPosition = (nextPos x cos, nextPos y sin) }
 
 randomBoid :: (Float, Float, Float) -> Boid
 randomBoid salts = Boid { boidPosition = (getPos s1, getPos s2)
-                        , boidHeading = saltedRange s3 (0, 2 * pi)
+                        , boidHeading = projectToRange s3 (0, 2 * pi)
                         , boidSteer = 0.0
                         }
   where (s1, s2, s3) = salts
-        getPos s = saltedRange s (-100, 100)
+        getPos s = projectToRange s (-100, 100)
 
 initialState :: Int -> [Float] -> World
 initialState 0          _                = []

@@ -51,7 +51,9 @@ getNearBoids boid boidDistance boids = filter isTooClose boids
     where isTooClose boid' = distance (boidPosition boid) (boidPosition boid') <= boidDistance
 
 averageBoidsPos :: [Boid] -> Point
-averageBoidsPos = undefined
+averageBoidsPos boids = (sum xs / n, sum ys / n)
+    where (xs, ys) = unzip $ map boidPosition boids
+          n = fromIntegral $ length boids
 
 separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = guideBoidTo guide boid

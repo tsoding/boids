@@ -20,6 +20,9 @@ data Boid = Boid { boidPosition :: Point
                  , boidSteer :: Float
                  } deriving Show
 
+boidsSpeed = 100.0
+guideSpeed = 100.0
+
 radsToDegrees :: Float -> Float
 radsToDegrees x = x * 180.0 / pi
 
@@ -41,7 +44,8 @@ guideBoidTo (guideX, guideY) boid = boid { boidSteer = da / abs da * 0.25 }
           da = atan2 dy dx - boidHeading boid
 
 nextBoid :: Float -> Boid -> Boid
-nextBoid deltaTime boid = boid { boidPosition = (x + deltaTime * cos heading * 100.0, y + deltaTime * sin heading * 100.0)
+nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
+                                                , y + deltaTime * sin heading * boidsSpeed)
                                , boidHeading = heading + steer * deltaTime
                                }
     where (x, y) = boidPosition boid
@@ -49,7 +53,8 @@ nextBoid deltaTime boid = boid { boidPosition = (x + deltaTime * cos heading * 1
           steer = boidSteer boid
 
 nextGuide :: Float -> Point -> Point
-nextGuide deltaTime (guideX, guideY) = (guideX + 100.0 * deltaTime, guideY + 100.0 * deltaTime)
+nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
+                                       , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
 randomBoid = do x <- randomRIO (-100.0, 100.0)

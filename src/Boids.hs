@@ -3,45 +3,78 @@ module Boids ( World
              , initialState
              , renderState
              , nextState
-             , radsToDegrees
              ) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
+import Graphics.Gloss.Data.Vector
+import Graphics.Gloss.Geometry.Angle
 import System.Random
 import Control.Monad
+import Vector
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
-                   }
+                   } deriving Show
 
 data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
                  } deriving Show
 
-radsToDegrees :: Float -> Float
-radsToDegrees x = x * 180.0 / pi
+boidsSpeed = 100.0
+guideSpeed = 100.0
+separationDistance = 100.0
+
+distance :: Point -> Point -> Float
+distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
+    where dx = x2 - x1
+          dy = y2 - y1
 
 renderBoid :: Boid -> Picture
-renderBoid boid = translate x y $ rotate (-heading) $ polygon ps
+renderBoid boid = translate x y $ rotate (-heading) $ pictures [circle (separationDistance / 2.0), polygon ps]
     where ps = [ (-10.0, 10.0)
                , (20.0, 0.0)
                , (-10.0, -10.0)
                ]
-          heading = radsToDegrees $ boidHeading boid
+          heading = radToDeg $ boidHeading boid
           (x, y) = boidPosition boid
 
 
-guideBoidTo :: Point -> Boid -> Boid
-guideBoidTo (guideX, guideY) boid = boid { boidSteer = da / abs da * 0.25 }
-    where (boidX, boidY) = boidPosition boid
-          (dx, dy) = (guideX - boidX, guideY - boidY)
+guideBoidToVector :: Vector -> Boid -> Boid
+guideBoidToVector direction boid = boid { boidSteer = da / abs da }
+    where argument = argV direction
           heading = boidHeading boid
-          da = atan2 dy dx - boidHeading boid
+          da = argument - heading
+
+guideBoidToPoint :: Point -> Boid -> Boid
+guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
+    where direction = fromPoints (boidPosition boid) guidePoint
+
+getNearBoids :: Boid -> Float -> [Boid] -> [Boid]
+getNearBoids boid boidDistance boids = filter isTooClose boids
+    where isTooClose boid' = distance (boidPosition boid) (boidPosition boid') <= boidDistance
+
+averageBoidsPos :: [Boid] -> Point
+averageBoidsPos boids = (sum xs / n, sum ys / n)
+    where (xs, ys) = unzip $ map boidPosition boids
+          n = fromIntegral $ length boids
+
+separateBoid :: Boid -> [Boid] -> Boid
+separateBoid boid otherBoids = case nearBoids of
+                                 [] -> boid
+                                 _ -> guideBoidToVector escapeDirection boid
+    where nearBoids = getNearBoids boid separationDistance otherBoids
+          escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
+
+separationRule :: [Boid] -> [Boid]
+separationRule boids = [ separateBoid boid $ excludedBoids i | (i, boid) <- indexedBoids]
+    where indexedBoids = zip [1..] boids
+          excludedBoids i = map snd $ filter (\(j, _) -> i /= j) indexedBoids
 
 nextBoid :: Float -> Boid -> Boid
-nextBoid deltaTime boid = boid { boidPosition = (x + deltaTime * cos heading * 100.0, y + deltaTime * sin heading * 100.0)
+nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
+                                                , y + deltaTime * sin heading * boidsSpeed)
                                , boidHeading = heading + steer * deltaTime
                                }
     where (x, y) = boidPosition boid
@@ -49,7 +82,8 @@ nextBoid deltaTime boid = boid { boidPosition = (x + deltaTime * cos heading * 1
           steer = boidSteer boid
 
 nextGuide :: Float -> Point -> Point
-nextGuide deltaTime (guideX, guideY) = (guideX + 100.0 * deltaTime, guideY + 100.0 * deltaTime)
+nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
+                                       , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
 randomBoid = do x <- randomRIO (-100.0, 100.0)
@@ -62,7 +96,7 @@ randomBoid = do x <- randomRIO (-100.0, 100.0)
                               }
 
 initialState :: IO World
-initialState = do boids <- replicateM 500 randomBoid
+initialState = do boids <- replicateM 100 randomBoid
                   return $ World { worldBoids = boids
                                  , worldGuide = (0.0, 0.0)
                                  }
@@ -74,5 +108,5 @@ nextState :: ViewPort -> Float -> World -> World
 nextState _ deltaTime world = world { worldBoids = boids
                                     , worldGuide = guide
                                     }
-    where boids = map (guideBoidTo guide . nextBoid deltaTime) $ worldBoids world
+    where boids = separationRule $ map (guideBoidToPoint guide . nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

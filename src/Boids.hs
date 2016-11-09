@@ -7,9 +7,11 @@ module Boids ( World
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
+import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Angle
 import System.Random
 import Control.Monad
+import Vector
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
@@ -22,7 +24,7 @@ data Boid = Boid { boidPosition :: Point
 
 boidsSpeed = 100.0
 guideSpeed = 100.0
-separationDistance = 50.0
+separationDistance = 100.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -39,12 +41,15 @@ renderBoid boid = translate x y $ rotate (-heading) $ pictures [circle (separati
           (x, y) = boidPosition boid
 
 
-guideBoidTo :: Point -> Boid -> Boid
-guideBoidTo (guideX, guideY) boid = boid { boidSteer = da / abs da * 0.25 }
-    where (boidX, boidY) = boidPosition boid
-          (dx, dy) = (guideX - boidX, guideY - boidY)
+guideBoidToVector :: Vector -> Boid -> Boid
+guideBoidToVector direction boid = boid { boidSteer = da / abs da }
+    where argument = argV direction
           heading = boidHeading boid
-          da = atan2 dy dx - boidHeading boid
+          da = argument - heading
+
+guideBoidToPoint :: Point -> Boid -> Boid
+guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
+    where direction = fromPoints (boidPosition boid) guidePoint
 
 getNearBoids :: Boid -> Float -> [Boid] -> [Boid]
 getNearBoids boid boidDistance boids = filter isTooClose boids
@@ -56,9 +61,11 @@ averageBoidsPos boids = (sum xs / n, sum ys / n)
           n = fromIntegral $ length boids
 
 separateBoid :: Boid -> [Boid] -> Boid
-separateBoid boid otherBoids = guideBoidTo guide boid
+separateBoid boid otherBoids = case nearBoids of
+                                 [] -> boid
+                                 _ -> guideBoidToVector escapeDirection boid
     where nearBoids = getNearBoids boid separationDistance otherBoids
-          guide = averageBoidsPos nearBoids
+          escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
 
 separationRule :: [Boid] -> [Boid]
 separationRule boids = [ separateBoid boid $ excludedBoids i | (i, boid) <- indexedBoids]
@@ -101,5 +108,5 @@ nextState :: ViewPort -> Float -> World -> World
 nextState _ deltaTime world = world { worldBoids = boids
                                     , worldGuide = guide
                                     }
-    where boids = map (guideBoidTo guide . nextBoid deltaTime) $ worldBoids world
+    where boids = separationRule $ map (guideBoidToPoint guide . nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

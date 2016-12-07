@@ -4,6 +4,7 @@ module Boids ( World
              , renderState
              , nextState
              , getNearBoids
+             , isWithinView
              ) where
 
 import Graphics.Gloss
@@ -26,6 +27,7 @@ data Boid = Boid { boidPosition :: Point
 boidsSpeed = 100.0
 guideSpeed = 100.0
 separationDistance = 100.0
+viewAngle = pi / 4 * 3
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -52,9 +54,14 @@ guideBoidToPoint :: Point -> Boid -> Boid
 guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
     where direction = fromPoints (boidPosition boid) guidePoint
 
+
+isWithinView :: Boid -> Boid -> Bool
+isWithinView boid1 boid2 = angleVV (unitVectorAtAngle $ boidHeading boid1) (fromPoints (boidPosition boid1) (boidPosition boid2)) <= viewAngle
+
 getNearBoids :: Boid -> Float -> [Boid] -> [Boid]
-getNearBoids boid boidDistance boids = filter isTooClose boids
-    where isTooClose boid' = distance (boidPosition boid) (boidPosition boid') <= boidDistance
+getNearBoids pivotBoid nearDistance boids = filter isVisible boids
+    where isVisible boid = isCloseEnough boid && isWithinView pivotBoid boid
+          isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= nearDistance
 
 averageBoidsPos :: [Boid] -> Point
 averageBoidsPos boids = (sum xs / n, sum ys / n)

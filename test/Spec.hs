@@ -5,7 +5,7 @@ import Test.HUnit
 import System.Exit
 
 testIsWithinView :: Test
-testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinView boid1 boid2))
+testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid1 boid2))
     where boid1 = Boid { boidPosition = (0.0, 0.0)
                        , boidHeading = 0.0
                        , boidSteer = 0.0
@@ -52,7 +52,7 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sortBoi
 
 main :: IO Counts
 main = do results <- runTestTT $ TestList [ TestLabel "Test filtering nearest boids" testGetNearBoids
-                                          , TestLabel "Test isWithinView" testIsWithinView]
+                                          , TestLabel "Test isWithinViewOf" testIsWithinView]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess
           else exitWith (ExitFailure 1)

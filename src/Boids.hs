@@ -3,7 +3,7 @@ module Boids ( World
              , initialState
              , renderState
              , nextState
-             , getNearBoids
+             , getNearbyBoids
              , isWithinView
              ) where
 
@@ -58,8 +58,8 @@ guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
 isWithinView :: Boid -> Boid -> Bool
 isWithinView boid1 boid2 = angleVV (unitVectorAtAngle $ boidHeading boid1) (fromPoints (boidPosition boid1) (boidPosition boid2)) <= viewAngle
 
-getNearBoids :: Boid -> Float -> [Boid] -> [Boid]
-getNearBoids pivotBoid nearDistance boids = filter isVisible boids
+getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
+getNearbyBoids pivotBoid nearDistance boids = filter isVisible boids
     where isVisible boid = isCloseEnough boid && isWithinView pivotBoid boid
           isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= nearDistance
 
@@ -72,7 +72,7 @@ separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = case nearBoids of
                                  [] -> boid
                                  _ -> guideBoidToVector escapeDirection boid
-    where nearBoids = getNearBoids boid separationDistance otherBoids
+    where nearBoids = getNearbyBoids boid separationDistance otherBoids
           escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
 
 separationRule :: [Boid] -> [Boid]

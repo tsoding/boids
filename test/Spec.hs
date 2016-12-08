@@ -47,7 +47,7 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sortBoi
                         ]
           allBoids = nearestBoids ++ farestBoids
           nearDistance = 203.03714
-          actualResult = getNearBoids pivotBoid nearDistance allBoids
+          actualResult = getNearbyBoids pivotBoid nearDistance allBoids
           sortBoids = sortBy (compare `on` boidPosition)
 
 main :: IO Counts

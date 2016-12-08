@@ -3,6 +3,8 @@ module Boids ( World
              , initialState
              , renderState
              , nextState
+             , getNearbyBoids
+             , isWithinViewOf
              ) where
 
 import Graphics.Gloss
@@ -25,6 +27,7 @@ data Boid = Boid { boidPosition :: Point
 boidsSpeed = 100.0
 guideSpeed = 100.0
 separationDistance = 100.0
+viewAngle = pi / 4 * 3
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -51,9 +54,16 @@ guideBoidToPoint :: Point -> Boid -> Boid
 guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
     where direction = fromPoints (boidPosition boid) guidePoint
 
-getNearBoids :: Boid -> Float -> [Boid] -> [Boid]
-getNearBoids boid boidDistance boids = filter isTooClose boids
-    where isTooClose boid' = distance (boidPosition boid) (boidPosition boid') <= boidDistance
+
+isWithinViewOf :: Boid -> Boid -> Bool
+isWithinViewOf boid1 boid2 = azimuth <= viewAngle
+    where azimuth = angleVV reference (fromPoints (boidPosition boid1) (boidPosition boid2))
+          reference = unitVectorAtAngle $ boidHeading boid1
+
+getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
+getNearbyBoids pivotBoid proximity boids = filter isVisible boids
+    where isVisible boid = isCloseEnough boid && isWithinViewOf pivotBoid boid
+          isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= proximity
 
 averageBoidsPos :: [Boid] -> Point
 averageBoidsPos boids = (sum xs / n, sum ys / n)
@@ -64,7 +74,7 @@ separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = case nearBoids of
                                  [] -> boid
                                  _ -> guideBoidToVector escapeDirection boid
-    where nearBoids = getNearBoids boid separationDistance otherBoids
+    where nearBoids = getNearbyBoids boid separationDistance otherBoids
           escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
 
 separationRule :: [Boid] -> [Boid]

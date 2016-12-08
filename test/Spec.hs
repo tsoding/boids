@@ -30,7 +30,7 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ 
                                 , boidSteer = 0.0
                                 }
                          ]
-          farestBoids = [ Boid { boidPosition = (505.70178, 58.542339)
+          farthestBoids = [ Boid { boidPosition = (505.70178, 58.542339)
                                , boidHeading = 0.0
                                , boidSteer = 0.0
                                }
@@ -45,7 +45,7 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ 
                                , boidSteer = 0.0
                                }
                         ]
-          allBoids = nearestBoids ++ farestBoids
+          allBoids = nearestBoids ++ farthestBoids
           nearDistance = 203.03714
           actualResult = getNearbyBoids pivotBoid nearDistance allBoids
 

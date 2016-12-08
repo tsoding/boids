@@ -16,7 +16,7 @@ testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWith
                        }
 
 testGetNearBoids :: Test
-testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sortBoids nearestBoids) (sortBoids actualResult))
+testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ map boidPosition nearestBoids) (sort $ map boidPosition actualResult))
     where pivotBoid = Boid { boidPosition = (388.46451, 289.70023)
                            , boidHeading = -pi / 2.0
                            , boidSteer = 0.0
@@ -48,7 +48,6 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sortBoi
           allBoids = nearestBoids ++ farestBoids
           nearDistance = 203.03714
           actualResult = getNearbyBoids pivotBoid nearDistance allBoids
-          sortBoids = sortBy (compare `on` boidPosition)
 
 main :: IO Counts
 main = do results <- runTestTT $ TestList [ TestLabel "Test filtering nearest boids" testGetNearBoids

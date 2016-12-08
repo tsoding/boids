@@ -15,8 +15,8 @@ testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWith
                        , boidSteer = 0.0
                        }
 
-testGetNearBoids :: Test
-testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ map boidPosition nearestBoids) (sort $ map boidPosition actualResult))
+testGetNearbyBoids :: Test
+testGetNearbyBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ map boidPosition nearestBoids) (sort $ map boidPosition actualResult))
     where pivotBoid = Boid { boidPosition = (388.46451, 289.70023)
                            , boidHeading = -pi / 2.0
                            , boidSteer = 0.0
@@ -50,7 +50,7 @@ testGetNearBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ 
           actualResult = getNearbyBoids pivotBoid nearDistance allBoids
 
 main :: IO Counts
-main = do results <- runTestTT $ TestList [ TestLabel "Test filtering nearest boids" testGetNearBoids
+main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boids by proximity" testGetNearbyBoids
                                           , TestLabel "Test isWithinViewOf" testIsWithinView]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess

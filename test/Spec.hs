@@ -46,8 +46,8 @@ testGetNearbyBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort 
                                }
                         ]
           allBoids = nearestBoids ++ farthestBoids
-          nearDistance = 203.03714
-          actualResult = getNearbyBoids pivotBoid nearDistance allBoids
+          proximity = 203.03714
+          actualResult = getNearbyBoids pivotBoid proximity allBoids
 
 main :: IO Counts
 main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boids by proximity" testGetNearbyBoids

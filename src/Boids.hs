@@ -61,9 +61,9 @@ isWithinViewOf boid1 boid2 = azimuth <= viewAngle
           reference = unitVectorAtAngle $ boidHeading boid1
 
 getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
-getNearbyBoids pivotBoid nearDistance boids = filter isVisible boids
+getNearbyBoids pivotBoid proximity boids = filter isVisible boids
     where isVisible boid = isCloseEnough boid && isWithinViewOf pivotBoid boid
-          isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= nearDistance
+          isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= proximity
 
 averageBoidsPos :: [Boid] -> Point
 averageBoidsPos boids = (sum xs / n, sum ys / n)

@@ -6,14 +6,19 @@ import Data.List
 import Text.XML.Light.Types
 import Text.XML.Light.Input
 import Text.XML.Light.Cursor
+import Text.XML.Light.Proc
 import Text.Read
 
-readXmlTestData :: FilePath -> IO [Content]
-readXmlTestData = fmap parseXML . readFile
+readXmlTestData :: FilePath -> IO (Maybe Element)
+readXmlTestData = fmap parseXMLDoc . readFile
 
-getAllCircles :: Maybe Cursor -> [Element]
+getAllCircles :: Maybe Element -> [Element]
 getAllCircles Nothing = []
-getAllCircles _ = undefined
+getAllCircles (Just root) = findElements name root
+    where name = QName { qName = "circle"
+                       , qURI = Just "http://www.w3.org/2000/svg"
+                       , qPrefix = Nothing
+                       }
 
 getAttrValue :: String -> [Attr] -> Maybe String
 getAttrValue name attrs =
@@ -40,5 +45,5 @@ onlyDefined (Nothing:xs) = onlyDefined xs
 onlyDefined (Just x:xs) = x:onlyDefined xs
 
 testBoids :: IO [Boid]
-testBoids = do cursor <- fmap fromForest $ readXmlTestData "./boids-test-data.svg"
-               return $ onlyDefined $ map circleToBoid $ getAllCircles cursor
+testBoids = do doc <- readXmlTestData "./boids-test-data.svg"
+               return $ onlyDefined $ map circleToBoid $ getAllCircles doc

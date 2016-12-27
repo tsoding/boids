@@ -24,16 +24,15 @@ readAttrMaybe name attrs = getAttrValue name attrs >>= readMaybe
 
 circleToBoid :: Element -> Maybe Boid
 circleToBoid element
-    | (qName $ elName element) == "circle" = position >>= \(x, y) ->
-        return $ Boid { boidPosition = (x, y)
-                      , boidHeading = 0.0
-                      , boidSteer = 0.0
-                      }
+    | (qName $ elName element) == "circle" =
+        do cx <- readAttrMaybe "cx" attrs
+           cy <- readAttrMaybe "cy" attrs
+           return $ Boid { boidPosition = (cx, cy)
+                         , boidHeading = 0.0
+                         , boidSteer = 0.0
+                         }
     | otherwise = Nothing
-    where cx = readAttrMaybe "cx" attrs
-          cy = readAttrMaybe "cy" attrs
-          position = liftM2 (,) cx cy
-          attrs = elAttribs element
+    where attrs = elAttribs element
 
 onlyDefined :: [Maybe a] -> [a]
 onlyDefined [] = []

@@ -9,7 +9,7 @@ import Text.XML.Light.Cursor
 import Text.Read
 
 readXmlTestData :: FilePath -> IO [Content]
-readXmlTestData = undefined
+readXmlTestData = fmap parseXML . readFile
 
 getAllCircles :: Maybe Cursor -> [Element]
 getAllCircles Nothing = []

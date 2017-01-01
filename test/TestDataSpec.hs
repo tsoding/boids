@@ -64,4 +64,4 @@ testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find
           xmlRoot = parseXMLDoc xmlData
           positiveTestCase = do actualBoid <- getBoidById xmlRoot "pivot"
                                 return $ TestList [boidsEqualTest expectedBoid actualBoid]
-          negativeTestCase = TestCase (assertBool "Found unexisting element" $ isNothing $ getBoidById xmlRoot "khooy")
+          negativeTestCase = TestCase (assertBool "Found non-existing element" $ isNothing $ getBoidById xmlRoot "khooy")

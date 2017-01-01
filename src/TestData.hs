@@ -50,9 +50,7 @@ circleToBoid element
     where attrs = elAttribs element
 
 onlyDefined :: [Maybe a] -> [a]
-onlyDefined [] = []
-onlyDefined (Nothing:xs) = onlyDefined xs
-onlyDefined (Just x:xs) = x:onlyDefined xs
+onlyDefined = map fromJust . filter isJust
 
 isCircle :: Element -> Bool
 isCircle element = elName element == svgCircleQName

@@ -53,7 +53,8 @@ testGetNearbyBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort 
 main :: IO Counts
 main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boids by proximity" testGetNearbyBoids
                                           , TestLabel "Test isWithinViewOf" testIsWithinView
-                                          , TestLabel "TestData.getAllBoids" testGetAllBoids ]
+                                          , TestLabel "TestData.getAllBoids" testGetAllBoids
+                                          , TestLabel "TestData.getBoidById" testGetBoidById ]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess
           else exitWith (ExitFailure 1)

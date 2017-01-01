@@ -1,26 +1,34 @@
 module TestData ( getAllBoids
                 , readXmlTestData
-                ) where
+                , getBoidById) where
 
 import Boids
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Text.XML.Light.Types
 import Text.XML.Light.Input
 import Text.XML.Light.Cursor
 import Text.XML.Light.Proc
 import Text.Read
 
+svgCircleQName :: QName
+svgCircleQName = QName { qName = "circle"
+                       , qURI = Just "http://www.w3.org/2000/svg"
+                       , qPrefix = Nothing
+                       }
+
+idAttrQName = QName { qName = "id"
+                    , qURI = Nothing
+                    , qPrefix = Nothing
+                    }
+
 readXmlTestData :: FilePath -> IO (Maybe Element)
 readXmlTestData = fmap parseXMLDoc . readFile
 
 getAllCircles :: Maybe Element -> [Element]
 getAllCircles Nothing = []
-getAllCircles (Just root) = findElements name root
-    where name = QName { qName = "circle"
-                       , qURI = Just "http://www.w3.org/2000/svg"
-                       , qPrefix = Nothing
-                       }
+getAllCircles (Just root) = findElements svgCircleQName root
 
 getAttrValue :: String -> [Attr] -> Maybe String
 getAttrValue name attrs =
@@ -46,5 +54,19 @@ onlyDefined [] = []
 onlyDefined (Nothing:xs) = onlyDefined xs
 onlyDefined (Just x:xs) = x:onlyDefined xs
 
+isCircle :: Element -> Bool
+isCircle element = elName element == svgCircleQName
+
+hasId :: Element -> String -> Bool
+hasId element id =
+    fromMaybe False $ lookupAttr idAttrQName (elAttribs element) >>= \a -> return (a == id)
+
+isCircleWithId :: String -> Element -> Bool
+isCircleWithId id element = isCircle element && hasId element id
+
 getAllBoids :: Maybe Element -> [Boid]
 getAllBoids = onlyDefined . map circleToBoid . getAllCircles
+
+getBoidById :: Maybe Element -> String -> Maybe Boid
+getBoidById Nothing _ = Nothing
+getBoidById (Just root) id = filterElement (isCircleWithId id) root >>= circleToBoid

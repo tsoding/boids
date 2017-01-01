@@ -26,28 +26,26 @@ boidsEqualTest expectedBoid actualBoid = TestLabel message $ TestList assertions
       assertions = map assertBoidsEqual properties
       assertBoidsEqual (f, message) = TestCase (assertApproxEqual message errorMargin (f expectedBoid) (f actualBoid))
 
-testXmlData :: String
-testXmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
-                      , "  <circle cx='349.0011' cy='426.28027' />"
-                      , "  <g>"
-                      , "    <circle cx='356.3743' cy='234.00' />"
-                      , "    <circle cx='123.459' cy='668.46458' />"
-                      , "  </g>"
-                      , "  <circle cx='972.374' cy='33.34923' />"
-                      , "</svg>"
-                      ]
-
-sortBoids :: [Boid] -> [Boid]
-sortBoids = sortBy (compare `on` boidPosition) 
-
-testBoids = [ Boid {boidPosition = (349.0011,426.28027), boidHeading = 0.0, boidSteer = 0.0}
-            , Boid {boidPosition = (356.3743,234.0), boidHeading = 0.0, boidSteer = 0.0}
-            , Boid {boidPosition = (123.459,668.4646), boidHeading = 0.0, boidSteer = 0.0}
-            , Boid {boidPosition = (972.374,33.34923), boidHeading = 0.0, boidSteer = 0.0}
-            ]
 
 testGetAllBoids :: Test
-testGetAllBoids = TestList $ map (uncurry $ boidsEqualTest) $ zip allBoids testBoids
-    where xmlRoot = parseXMLDoc testXmlData
+testGetAllBoids = TestList $ map (uncurry $ boidsEqualTest) $ zip allBoids expectedBoids
+    where xmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
+                            , "  <circle cx='349.0011' cy='426.28027' />"
+                            , "  <g>"
+                            , "    <circle cx='356.3743' cy='234.00' />"
+                            , "    <circle cx='123.459' cy='668.46458' />"
+                            , "  </g>"
+                            , "  <circle cx='972.374' cy='33.34923' />"
+                            , "</svg>"
+                            ],
+
+          xmlRoot = parseXMLDoc xmlData
+
+          expectedBoids = [ Boid {boidPosition = (349.0011,426.28027), boidHeading = 0.0, boidSteer = 0.0}
+                          , Boid {boidPosition = (356.3743,234.0), boidHeading = 0.0, boidSteer = 0.0}
+                          , Boid {boidPosition = (123.459,668.4646), boidHeading = 0.0, boidSteer = 0.0}
+                          , Boid {boidPosition = (972.374,33.34923), boidHeading = 0.0, boidSteer = 0.0}
+                          ]
+
           allBoids = getAllBoids xmlRoot
                      

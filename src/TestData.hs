@@ -1,4 +1,6 @@
-module TestData where
+module TestData ( getAllBoids
+                , readXmlTestData
+                ) where
 
 import Boids
 import Control.Monad
@@ -44,6 +46,5 @@ onlyDefined [] = []
 onlyDefined (Nothing:xs) = onlyDefined xs
 onlyDefined (Just x:xs) = x:onlyDefined xs
 
-testBoids :: IO [Boid]
-testBoids = do doc <- readXmlTestData "./boids-test-data.svg"
-               return $ onlyDefined $ map circleToBoid $ getAllCircles doc
+getAllBoids :: Maybe Element -> [Boid]
+getAllBoids = onlyDefined . map circleToBoid . getAllCircles

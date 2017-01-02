@@ -49,9 +49,6 @@ circleToBoid element
     | otherwise = Nothing
     where attrs = elAttribs element
 
-onlyDefined :: [Maybe a] -> [a]
-onlyDefined = map fromJust . filter isJust
-
 isCircle :: Element -> Bool
 isCircle element = elName element == svgCircleQName
 
@@ -63,7 +60,7 @@ isCircleWithId :: String -> Element -> Bool
 isCircleWithId id element = isCircle element && hasId element id
 
 getAllBoids :: Maybe Element -> [Boid]
-getAllBoids = onlyDefined . map circleToBoid . getAllCircles
+getAllBoids = catMaybes . map circleToBoid . getAllCircles
 
 getBoidById :: Maybe Element -> String -> Maybe Boid
 getBoidById Nothing _ = Nothing

@@ -68,10 +68,10 @@ hasId element id =
     fromMaybe False $ lookupAttr idAttrQName (elAttribs element) >>= \a -> return (a == id)
 
 isCircleWithId :: String -> Element -> Bool
-isCircleWithId id element = isCircle element && hasId element id
+isCircleWithId id element = isCircle element && element `hasId` id
 
 isGroupWithId :: String -> Element -> Bool
-isGroupWithId id element = isGroup element && hasId element id
+isGroupWithId id element = isGroup element && element `hasId` id
 
 getAllBoids :: Maybe Element -> [Boid]
 getAllBoids = catMaybes . map circleToBoid . getAllCircles

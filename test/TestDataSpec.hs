@@ -1,5 +1,6 @@
 module TestDataSpec ( testGetAllBoids
                     , testGetBoidById
+                    , testGetBoidsGroupById
                     ) where
 
 import Test.HUnit
@@ -53,6 +54,7 @@ testGetAllBoids = TestList $ map (uncurry $ boidsEqualTest) $ zip allBoids expec
           allBoids = getAllBoids xmlRoot
                      
 
+testGetBoidById :: Test
 testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find boid with id 'pivot'") positiveTestCase
                            , negativeTestCase
                            ]
@@ -60,8 +62,31 @@ testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find
           xmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
                             , "  <circle id='pivot' cx='349.0011' cy='426.28027' />"
                             , "  <circle cx='972.374' cy='33.34923' />"
-                            , "</svg>"]
+                            , "</svg>" ]
           xmlRoot = parseXMLDoc xmlData
           positiveTestCase = do actualBoid <- getBoidById xmlRoot "pivot"
                                 return $ TestList [boidsEqualTest expectedBoid actualBoid]
           negativeTestCase = TestCase (assertBool "Found non-existing element" $ isNothing $ getBoidById xmlRoot "khooy")
+
+testGetBoidsGroupById :: Test
+testGetBoidsGroupById = TestList [ nonExistingIdCase
+                                 , innerGroupCase
+                                 , outerGroupCase ]
+    where xmlData = unlines [ "<svg>"
+                            , "  <g id='outer'>"
+                            , "    <circle cx='326' cy='155' />"
+                            , "    <circle cx='478' cy='419' />"
+                            , "    <circle cx='107' cy='449' />"
+                            , "    <g id='inner'>"
+                            , "      <circle cx='102' cy='152' />"
+                            , "      <circle cx='327' cy='246' />"
+                            , "      <circle cx='444' cy='358' />"
+                            , "    </g>"
+                            , "  </g>"
+                            , "</svg>"
+                            ]
+          xmlRoot = parseXMLDoc xmlData
+
+          nonExistingIdCase = TestCase (assertBool "Found non-existing elements" $ null $ getBoidsGroupById xmlRoot "blah")
+          innerGroupCase = undefined
+          outerGroupCase = undefined

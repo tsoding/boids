@@ -29,8 +29,8 @@ assertBoidsEqual expectedBoid actualBoid = sequence_ assertions
                    , (snd . boidPosition, "Y coordinates were not equal")
                    , (boidHeading, "Headings were not equal")
                    , (boidSteer, "Steers were not equal") ]
-      assertions = map assertBoidsEqual properties
-      assertBoidsEqual (f, message) = assertApproxEqual message errorMargin (f expectedBoid) (f actualBoid)
+      assertions = map makeAssertion properties
+      makeAssertion (f, message) = assertApproxEqual message errorMargin (f expectedBoid) (f actualBoid)
 
 boidsEqualTest :: Boid -> Boid -> Test
 boidsEqualTest expectedBoid actualBoid = TestLabel message $ TestList assertions

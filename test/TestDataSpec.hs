@@ -105,5 +105,20 @@ testGetBoidsGroupById = TestList [ nonExistingIdCase
           xmlRoot = parseXMLDoc xmlData
 
           nonExistingIdCase = TestCase (assertBool "Found non-existing elements" $ null $ getBoidsGroupById xmlRoot "blah")
-          innerGroupCase = undefined
-          outerGroupCase = undefined
+          innerGroupCase = TestCase (assertBoidsListsEqual expectedInnerBoids actualInnerBoids)
+              where
+                expectedInnerBoids = [ Boid { boidPosition = (102, 152), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (327, 246), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (444, 358), boidHeading = 0.0, boidSteer = 0.0 }
+                                     ]
+                actualInnerBoids = getBoidsGroupById xmlRoot "inner"
+          outerGroupCase = TestCase (assertBoidsListsEqual expectedOuterBoids actualOuterBoids)
+              where
+                expectedOuterBoids = [ Boid { boidPosition = (102, 152), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (327, 246), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (444, 358), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (326, 155), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (478, 419), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (107, 449), boidHeading = 0.0, boidSteer = 0.0 }
+                                     ]
+                actualOuterBoids = getBoidsGroupById xmlRoot "outer"

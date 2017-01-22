@@ -1,6 +1,8 @@
 module TestData ( getAllBoids
                 , readXmlTestData
-                , getBoidById) where
+                , getBoidById
+                , getBoidsGroupById
+                ) where
 
 import Boids
 import Control.Monad
@@ -17,6 +19,12 @@ svgCircleQName = QName { qName = "circle"
                        , qURI = Just "http://www.w3.org/2000/svg"
                        , qPrefix = Nothing
                        }
+
+svgGroupQName :: QName
+svgGroupQName = QName { qName = "g"
+                      , qURI = Just "http://www.w3.org/2000/svg"
+                      , qPrefix = Nothing
+                      }
 
 idAttrQName = QName { qName = "id"
                     , qURI = Nothing
@@ -52,12 +60,18 @@ circleToBoid element
 isCircle :: Element -> Bool
 isCircle element = elName element == svgCircleQName
 
+isGroup :: Element -> Bool
+isGroup element = elName element == svgGroupQName
+
 hasId :: Element -> String -> Bool
 hasId element id =
     fromMaybe False $ lookupAttr idAttrQName (elAttribs element) >>= \a -> return (a == id)
 
 isCircleWithId :: String -> Element -> Bool
-isCircleWithId id element = isCircle element && hasId element id
+isCircleWithId id element = isCircle element && element `hasId` id
+
+isGroupWithId :: String -> Element -> Bool
+isGroupWithId id element = isGroup element && element `hasId` id
 
 getAllBoids :: Maybe Element -> [Boid]
 getAllBoids = catMaybes . map circleToBoid . getAllCircles
@@ -65,3 +79,8 @@ getAllBoids = catMaybes . map circleToBoid . getAllCircles
 getBoidById :: Maybe Element -> String -> Maybe Boid
 getBoidById Nothing _ = Nothing
 getBoidById (Just root) id = filterElement (isCircleWithId id) root >>= circleToBoid
+
+getBoidsGroupById :: Maybe Element -> String -> [Boid]
+getBoidsGroupById Nothing _ = []
+getBoidsGroupById (Just root) id = groupRoot >>= getAllBoids
+    where groupRoot = [filterElement (isGroupWithId id) root]

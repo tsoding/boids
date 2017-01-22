@@ -1,5 +1,6 @@
 module TestDataSpec ( testGetAllBoids
                     , testGetBoidById
+                    , testGetBoidsGroupById
                     ) where
 
 import Test.HUnit
@@ -13,6 +14,23 @@ import Data.Maybe
 
 errorMargin :: Float
 errorMargin = 1e-6
+
+assertBoidsListsEqual :: [Boid] -> [Boid] -> Assertion
+assertBoidsListsEqual expectedBoids actualBoids = sequence_ assertions
+    where expectedBoids' = sort expectedBoids
+          actualBoids' = sort actualBoids
+          lengthEquality = assertEqual "" (length expectedBoids) (length actualBoids)
+          assertions = lengthEquality : (map (uncurry $ assertBoidsEqual) $ zip expectedBoids' actualBoids')
+
+assertBoidsEqual :: Boid -> Boid -> Assertion
+assertBoidsEqual expectedBoid actualBoid = sequence_ assertions
+    where
+      properties = [ (fst . boidPosition, "X coordinates were not equal")
+                   , (snd . boidPosition, "Y coordinates were not equal")
+                   , (boidHeading, "Headings were not equal")
+                   , (boidSteer, "Steers were not equal") ]
+      assertions = map makeAssertion properties
+      makeAssertion (f, message) = assertApproxEqual message errorMargin (f expectedBoid) (f actualBoid)
 
 boidsEqualTest :: Boid -> Boid -> Test
 boidsEqualTest expectedBoid actualBoid = TestLabel message $ TestList assertions
@@ -51,8 +69,9 @@ testGetAllBoids = TestList $ map (uncurry $ boidsEqualTest) $ zip allBoids expec
                           ]
 
           allBoids = getAllBoids xmlRoot
-                     
 
+
+testGetBoidById :: Test
 testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find boid with id 'pivot'") positiveTestCase
                            , negativeTestCase
                            ]
@@ -60,8 +79,46 @@ testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find
           xmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
                             , "  <circle id='pivot' cx='349.0011' cy='426.28027' />"
                             , "  <circle cx='972.374' cy='33.34923' />"
-                            , "</svg>"]
+                            , "</svg>" ]
           xmlRoot = parseXMLDoc xmlData
           positiveTestCase = do actualBoid <- getBoidById xmlRoot "pivot"
                                 return $ TestList [boidsEqualTest expectedBoid actualBoid]
           negativeTestCase = TestCase (assertBool "Found non-existing element" $ isNothing $ getBoidById xmlRoot "khooy")
+
+testGetBoidsGroupById :: Test
+testGetBoidsGroupById = TestList [ TestLabel "Non-existing group id" nonExistingIdCase
+                                 , TestLabel "Inner group" innerGroupCase
+                                 , TestLabel "Outer group" outerGroupCase ]
+    where xmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
+                            , "  <g id='outer'>"
+                            , "    <circle cx='326' cy='155' />"
+                            , "    <circle cx='478' cy='419' />"
+                            , "    <circle cx='107' cy='449' />"
+                            , "    <g id='inner'>"
+                            , "      <circle cx='102' cy='152' />"
+                            , "      <circle cx='327' cy='246' />"
+                            , "      <circle cx='444' cy='358' />"
+                            , "    </g>"
+                            , "  </g>"
+                            , "</svg>"
+                            ]
+          xmlRoot = parseXMLDoc xmlData
+
+          nonExistingIdCase = TestCase (assertBool "Found non-existing elements" $ null $ getBoidsGroupById xmlRoot "blah")
+          innerGroupCase = TestCase (assertBoidsListsEqual expectedInnerBoids actualInnerBoids)
+              where
+                expectedInnerBoids = [ Boid { boidPosition = (102, 152), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (327, 246), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (444, 358), boidHeading = 0.0, boidSteer = 0.0 }
+                                     ]
+                actualInnerBoids = getBoidsGroupById xmlRoot "inner"
+          outerGroupCase = TestCase (assertBoidsListsEqual expectedOuterBoids actualOuterBoids)
+              where
+                expectedOuterBoids = [ Boid { boidPosition = (102, 152), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (327, 246), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (444, 358), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (326, 155), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (478, 419), boidHeading = 0.0, boidSteer = 0.0 }
+                                     , Boid { boidPosition = (107, 449), boidHeading = 0.0, boidSteer = 0.0 }
+                                     ]
+                actualOuterBoids = getBoidsGroupById xmlRoot "outer"

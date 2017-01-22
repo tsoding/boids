@@ -22,7 +22,7 @@ data World = World { worldBoids :: [Boid]
 data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
-                 } deriving Show
+                 } deriving (Show, Eq, Ord)
 
 boidsSpeed = 100.0
 guideSpeed = 100.0

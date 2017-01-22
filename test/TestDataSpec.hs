@@ -86,10 +86,10 @@ testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find
           negativeTestCase = TestCase (assertBool "Found non-existing element" $ isNothing $ getBoidById xmlRoot "khooy")
 
 testGetBoidsGroupById :: Test
-testGetBoidsGroupById = TestList [ nonExistingIdCase
-                                 , innerGroupCase
-                                 , outerGroupCase ]
-    where xmlData = unlines [ "<svg>"
+testGetBoidsGroupById = TestList [ TestLabel "Non-existing group id" nonExistingIdCase
+                                 , TestLabel "Inner group" innerGroupCase
+                                 , TestLabel "Outer group" outerGroupCase ]
+    where xmlData = unlines [ "<svg xmlns='http://www.w3.org/2000/svg'>"
                             , "  <g id='outer'>"
                             , "    <circle cx='326' cy='155' />"
                             , "    <circle cx='478' cy='419' />"

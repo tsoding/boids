@@ -1,6 +1,8 @@
 module TestData ( getAllBoids
                 , readXmlTestData
-                , getBoidById) where
+                , getBoidById
+                , getBoidsGroupById
+                ) where
 
 import Boids
 import Control.Monad
@@ -65,3 +67,6 @@ getAllBoids = catMaybes . map circleToBoid . getAllCircles
 getBoidById :: Maybe Element -> String -> Maybe Boid
 getBoidById Nothing _ = Nothing
 getBoidById (Just root) id = filterElement (isCircleWithId id) root >>= circleToBoid
+
+getBoidsGroupById :: Maybe Element -> String -> [Boid]
+getBoidsGroupById = undefined

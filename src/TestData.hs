@@ -20,6 +20,12 @@ svgCircleQName = QName { qName = "circle"
                        , qPrefix = Nothing
                        }
 
+svgGroupQName :: QName
+svgGroupQName = QName { qName = "g"
+                      , qURI = Just "http://www.w3.org/2000/svg"
+                      , qPrefix = Nothing
+                      }
+
 idAttrQName = QName { qName = "id"
                     , qURI = Nothing
                     , qPrefix = Nothing
@@ -54,12 +60,18 @@ circleToBoid element
 isCircle :: Element -> Bool
 isCircle element = elName element == svgCircleQName
 
+isGroup :: Element -> Bool
+isGroup element = elName element == svgGroupQName
+
 hasId :: Element -> String -> Bool
 hasId element id =
     fromMaybe False $ lookupAttr idAttrQName (elAttribs element) >>= \a -> return (a == id)
 
 isCircleWithId :: String -> Element -> Bool
 isCircleWithId id element = isCircle element && hasId element id
+
+isGroupWithId :: String -> Element -> Bool
+isGroupWithId id element = isGroup element && hasId element id
 
 getAllBoids :: Maybe Element -> [Boid]
 getAllBoids = catMaybes . map circleToBoid . getAllCircles
@@ -69,4 +81,6 @@ getBoidById Nothing _ = Nothing
 getBoidById (Just root) id = filterElement (isCircleWithId id) root >>= circleToBoid
 
 getBoidsGroupById :: Maybe Element -> String -> [Boid]
-getBoidsGroupById = undefined
+getBoidsGroupById Nothing _ = []
+getBoidsGroupById (Just root) id = groupRoot >>= getAllBoids
+    where groupRoot = [filterElement (isGroupWithId id) root]

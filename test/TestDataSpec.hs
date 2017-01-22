@@ -15,6 +15,23 @@ import Data.Maybe
 errorMargin :: Float
 errorMargin = 1e-6
 
+assertBoidsListsEqual :: [Boid] -> [Boid] -> Assertion
+assertBoidsListsEqual expectedBoids actualBoids = sequence_ assertions
+    where expectedBoids' = sort expectedBoids
+          actualBoids' = sort actualBoids
+          lengthEquality = assertEqual "" (length expectedBoids) (length actualBoids)
+          assertions = lengthEquality : (map (uncurry $ assertBoidsEqual) $ zip expectedBoids' actualBoids')
+
+assertBoidsEqual :: Boid -> Boid -> Assertion
+assertBoidsEqual expectedBoid actualBoid = sequence_ assertions
+    where
+      properties = [ (fst . boidPosition, "X coordinates were not equal")
+                   , (snd . boidPosition, "Y coordinates were not equal")
+                   , (boidHeading, "Headings were not equal")
+                   , (boidSteer, "Steers were not equal") ]
+      assertions = map assertBoidsEqual properties
+      assertBoidsEqual (f, message) = assertApproxEqual message errorMargin (f expectedBoid) (f actualBoid)
+
 boidsEqualTest :: Boid -> Boid -> Test
 boidsEqualTest expectedBoid actualBoid = TestLabel message $ TestList assertions
     where
@@ -52,7 +69,7 @@ testGetAllBoids = TestList $ map (uncurry $ boidsEqualTest) $ zip allBoids expec
                           ]
 
           allBoids = getAllBoids xmlRoot
-                     
+
 
 testGetBoidById :: Test
 testGetBoidById = TestList [ fromMaybe (TestCase $ assertFailure "Could not find boid with id 'pivot'") positiveTestCase

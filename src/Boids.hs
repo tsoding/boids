@@ -24,10 +24,11 @@ data Boid = Boid { boidPosition :: Point
                  , boidSteer :: Float
                  } deriving (Show, Eq, Ord)
 
-boidsSpeed = 100.0
+boidsSpeed = 70.0
 guideSpeed = 100.0
-separationDistance = 40.0
-alignmentDistance = 60.0
+separationDistance = 10.0
+alignmentDistance = 30.0
+cohesionDistance = 200.0
 viewAngle = pi / 4 * 3
 
 distance :: Point -> Point -> Float
@@ -90,17 +91,30 @@ alignBoid boid otherBoids = case nearBoids of
     where nearBoids = getNearbyBoids boid alignmentDistance otherBoids
           targetHeading = averageBoidsHeading otherBoids
 
+stickBoid :: Boid -> [Boid] -> Boid
+stickBoid boid otherBoids = case nearBoids of
+                              [] -> boid
+                              _ -> guideBoidToPoint targetPoint boid
+    where nearBoids = getNearbyBoids boid cohesionDistance otherBoids
+          targetPoint = averageBoidsPos nearBoids
+
 boidsProduct :: [Boid] -> (Boid -> [Boid] -> Boid) -> [Boid]
 boidsProduct boids f = [ f boid $ excludedBoids i | (i, boid) <- indexedBoids ]
     where indexedBoids = zip [1..] boids
           excludedBoids i = map snd $ filter (\(j, _) -> i /= j) indexedBoids
-
 
 separationRule :: [Boid] -> [Boid]
 separationRule boids = boidsProduct boids separateBoid
 
 alignmentRule :: [Boid] -> [Boid]
 alignmentRule boids = boidsProduct boids alignBoid
+
+cohesionRule :: [Boid] -> [Boid]
+cohesionRule boids = boidsProduct boids stickBoid
+
+resetBoidsSteer :: [Boid] -> [Boid]
+resetBoidsSteer boids = map resetBoid boids
+    where resetBoid boid = boid { boidSteer = 0.0 }
 
 nextBoid :: Float -> Boid -> Boid
 nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
@@ -116,8 +130,8 @@ nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
                                        , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
-randomBoid = do x <- randomRIO (-100.0, 100.0)
-                y <- randomRIO (-100.0, 100.0)
+randomBoid = do x <- randomRIO (-600.0, 600.0)
+                y <- randomRIO (-600.0, 600.0)
                 heading <- randomRIO (0.0, 2 * pi)
                 steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)
@@ -126,7 +140,7 @@ randomBoid = do x <- randomRIO (-100.0, 100.0)
                               }
 
 initialState :: IO World
-initialState = do boids <- replicateM 100 randomBoid
+initialState = do boids <- replicateM 200 randomBoid
                   return $ World { worldBoids = boids
                                  , worldGuide = (0.0, 0.0)
                                  }
@@ -138,5 +152,5 @@ nextState :: ViewPort -> Float -> World -> World
 nextState _ deltaTime world = world { worldBoids = boids
                                     , worldGuide = guide
                                     }
-    where boids = separationRule $ alignmentRule $ map (nextBoid deltaTime) $ worldBoids world
+    where boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

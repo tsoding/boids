@@ -26,7 +26,8 @@ data Boid = Boid { boidPosition :: Point
 
 boidsSpeed = 100.0
 guideSpeed = 100.0
-separationDistance = 100.0
+separationDistance = 40.0
+alignmentDistance = 60.0
 viewAngle = pi / 4 * 3
 
 distance :: Point -> Point -> Float
@@ -43,12 +44,13 @@ renderBoid boid = translate x y $ rotate (-heading) $ pictures [circle (separati
           heading = radToDeg $ boidHeading boid
           (x, y) = boidPosition boid
 
+guideBoidToAngle :: Float -> Boid -> Boid
+guideBoidToAngle angle boid = boid { boidSteer = da / abs da }
+    where da = angle - heading
+          heading = boidHeading boid
 
 guideBoidToVector :: Vector -> Boid -> Boid
-guideBoidToVector direction boid = boid { boidSteer = da / abs da }
-    where argument = argV direction
-          heading = boidHeading boid
-          da = argument - heading
+guideBoidToVector direction boid = guideBoidToAngle (argV direction) boid
 
 guideBoidToPoint :: Point -> Boid -> Boid
 guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
@@ -70,6 +72,10 @@ averageBoidsPos boids = (sum xs / n, sum ys / n)
     where (xs, ys) = unzip $ map boidPosition boids
           n = fromIntegral $ length boids
 
+averageBoidsHeading :: [Boid] -> Float
+averageBoidsHeading boids = (sum $ map boidHeading boids) / n
+    where n = fromIntegral $ length boids
+
 separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = case nearBoids of
                                  [] -> boid
@@ -77,10 +83,24 @@ separateBoid boid otherBoids = case nearBoids of
     where nearBoids = getNearbyBoids boid separationDistance otherBoids
           escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
 
-separationRule :: [Boid] -> [Boid]
-separationRule boids = [ separateBoid boid $ excludedBoids i | (i, boid) <- indexedBoids]
+alignBoid :: Boid -> [Boid] -> Boid
+alignBoid boid otherBoids = case nearBoids of
+                              [] -> boid
+                              _ -> guideBoidToAngle targetHeading boid
+    where nearBoids = getNearbyBoids boid alignmentDistance otherBoids
+          targetHeading = averageBoidsHeading otherBoids
+
+boidsProduct :: [Boid] -> (Boid -> [Boid] -> Boid) -> [Boid]
+boidsProduct boids f = [ f boid $ excludedBoids i | (i, boid) <- indexedBoids ]
     where indexedBoids = zip [1..] boids
           excludedBoids i = map snd $ filter (\(j, _) -> i /= j) indexedBoids
+
+
+separationRule :: [Boid] -> [Boid]
+separationRule boids = boidsProduct boids separateBoid
+
+alignmentRule :: [Boid] -> [Boid]
+alignmentRule boids = boidsProduct boids alignBoid
 
 nextBoid :: Float -> Boid -> Boid
 nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
@@ -118,5 +138,5 @@ nextState :: ViewPort -> Float -> World -> World
 nextState _ deltaTime world = world { worldBoids = boids
                                     , worldGuide = guide
                                     }
-    where boids = separationRule $ map (guideBoidToPoint guide . nextBoid deltaTime) $ worldBoids world
+    where boids = separationRule $ alignmentRule $ map (nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

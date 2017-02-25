@@ -5,6 +5,7 @@ module Boids ( World
              , nextState
              , getNearbyBoids
              , isWithinViewOf
+             , guideBoidToAngle
              ) where
 
 import Graphics.Gloss
@@ -46,9 +47,12 @@ renderBoid boid = translate x y $ rotate (-heading) $ pictures [circle (separati
           (x, y) = boidPosition boid
 
 guideBoidToAngle :: Float -> Boid -> Boid
-guideBoidToAngle angle boid = boid { boidSteer = da / abs da }
+guideBoidToAngle angle boid
+    | abs da >= errorMargin = boid { boidSteer = da / abs da }
+    | otherwise = boid
     where da = angle - heading
           heading = boidHeading boid
+          errorMargin = 1e-6
 
 guideBoidToVector :: Vector -> Boid -> Boid
 guideBoidToVector direction boid = guideBoidToAngle (argV direction) boid
@@ -69,11 +73,13 @@ getNearbyBoids pivotBoid proximity boids = filter isVisible boids
           isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= proximity
 
 averageBoidsPos :: [Boid] -> Point
+averageBoidsPos [] = error "Empty list in averageBoidsPos"
 averageBoidsPos boids = (sum xs / n, sum ys / n)
     where (xs, ys) = unzip $ map boidPosition boids
           n = fromIntegral $ length boids
 
 averageBoidsHeading :: [Boid] -> Float
+averageBoidsHeading [] = error "Empty list in averageBoidsHeading"
 averageBoidsHeading boids = (sum $ map boidHeading boids) / n
     where n = fromIntegral $ length boids
 

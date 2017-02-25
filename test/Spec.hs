@@ -3,7 +3,9 @@ import Data.Function
 import Boids
 import Test.HUnit
 import System.Exit
+
 import TestDataSpec
+import BoidsSpec
 
 testIsWithinView :: Test
 testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid1 boid2))
@@ -55,8 +57,8 @@ main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boi
                                           , TestLabel "Test isWithinViewOf" testIsWithinView
                                           , TestLabel "TestData.getAllBoids" testGetAllBoids
                                           , TestLabel "TestData.getBoidById" testGetBoidById
-                                          , TestLabel "TestData.getBoidsGroupById" testGetBoidsGroupById ]
+                                          , TestLabel "TestData.getBoidsGroupById" testGetBoidsGroupById
+                                          , TestLabel "Boid.guideBoidToAngle" testGuideBoidToAngle ]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess
           else exitWith (ExitFailure 1)
-

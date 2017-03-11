@@ -6,24 +6,31 @@ module Boids ( World
              , getNearbyBoids
              , isWithinViewOf
              , guideBoidToAngle
+             , handleInput
              ) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Angle
+import Graphics.Gloss.Interface.Pure.Game
 import System.Random
 import Control.Monad
 import Vector
+import Debug.Trace
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
-                   } deriving Show
+                   , worldViewPort :: ViewPort
+                   , worldDraggingPivot :: Maybe Point
+                   }
 
 data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
                  } deriving (Show, Eq, Ord)
+
+zoomSpeed = 0.05
 
 boidsSpeed = 70.0
 guideSpeed = 100.0
@@ -149,10 +156,31 @@ initialState :: IO World
 initialState = do boids <- replicateM 200 randomBoid
                   return $ World { worldBoids = boids
                                  , worldGuide = (0.0, 0.0)
+                                 , worldViewPort = viewPortInit
+                                 , worldDraggingPivot = Nothing
                                  }
 
+zoom :: Float -> ViewPort -> ViewPort
+zoom step viewPort = viewPort {
+                       viewPortScale = max (scale + step) 0.0
+                     }
+    where scale = viewPortScale viewPort
+
+handleInput :: Event -> World -> World
+
+-- TODO: take cursor position into account during zooming
+handleInput (EventKey (MouseButton WheelUp) Down _ _) world =
+    world { worldViewPort = zoom zoomSpeed $ worldViewPort world }
+handleInput (EventKey (MouseButton WheelDown) Down _ _) world =
+    world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
+-- TODO: implement dragging around
+-- TODO: implement boids following the mouse cursor
+handleInput _ world = world
+
 renderState :: World -> Picture
-renderState = pictures . map renderBoid . worldBoids
+renderState world = applyViewPortToPicture viewPort frame
+    where frame = pictures $ map renderBoid $ worldBoids world
+          viewPort = worldViewPort world
 
 nextState :: ViewPort -> Float -> World -> World
 nextState _ deltaTime world = world { worldBoids = boids

@@ -22,7 +22,6 @@ import Debug.Trace
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
                    , worldViewPort :: ViewPort
-                   , worldDraggingPivot :: Maybe Point
                    }
 
 data Boid = Boid { boidPosition :: Point
@@ -157,7 +156,6 @@ initialState = do boids <- replicateM 200 randomBoid
                   return $ World { worldBoids = boids
                                  , worldGuide = (0.0, 0.0)
                                  , worldViewPort = viewPortInit
-                                 , worldDraggingPivot = Nothing
                                  }
 
 zoom :: Float -> ViewPort -> ViewPort

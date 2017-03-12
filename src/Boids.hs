@@ -153,12 +153,15 @@ randomBoid = do x <- randomRIO (-600.0, 600.0)
                               , boidSteer = steer
                               }
 
+emptyState :: World
+emptyState = World { worldBoids = []
+                   , worldGuide = (0.0, 0.0)
+                   , worldViewPort = viewPortInit
+                   }
+
 randomState :: IO World
 randomState = do boids <- replicateM 200 randomBoid
-                 return $ World { worldBoids = boids
-                                , worldGuide = (0.0, 0.0)
-                                , worldViewPort = viewPortInit
-                                }
+                 return $ emptyState { worldBoids = boids }
 
 -- TODO: take cursor position into account during zooming
 zoomControl :: Event -> World -> World

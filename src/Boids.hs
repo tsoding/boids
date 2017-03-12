@@ -9,6 +9,7 @@ module Boids ( World
              , handleInput
              ) where
 
+import Data.List
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.Vector
@@ -159,16 +160,20 @@ initialState = do boids <- replicateM 200 randomBoid
                                  , worldViewPort = viewPortInit
                                  }
 
-handleInput :: Event -> World -> World
-
 -- TODO: take cursor position into account during zooming
-handleInput (EventKey (MouseButton WheelUp) Down _ _) world =
+zoomControl :: Event -> World -> World
+zoomControl (EventKey (MouseButton WheelUp) Down _ _) world =
     world { worldViewPort = zoom zoomSpeed $ worldViewPort world }
-handleInput (EventKey (MouseButton WheelDown) Down _ _) world =
+zoomControl (EventKey (MouseButton WheelDown) Down _ _) world =
     world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
+zoomControl _ world = world
+
 -- TODO: implement dragging around
 -- TODO: implement boids following the mouse cursor
-handleInput _ world = world
+
+handleInput :: Event -> World -> World
+handleInput event world = foldl' (\w f -> f event world) world controllers
+    where controllers = [zoomControl]
 
 renderState :: World -> Picture
 renderState world = applyViewPortToPicture viewPort frame

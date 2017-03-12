@@ -58,7 +58,8 @@ main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boi
                                           , TestLabel "TestData.getAllBoids" testGetAllBoids
                                           , TestLabel "TestData.getBoidById" testGetBoidById
                                           , TestLabel "TestData.getBoidsGroupById" testGetBoidsGroupById
-                                          , TestLabel "Boid.guideBoidToAngle" testGuideBoidToAngle ]
+                                          , TestLabel "Boids.guideBoidToAngle" testGuideBoidToAngle
+                                          , TestLabel "Boids.zoom" testZoom]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess
           else exitWith (ExitFailure 1)

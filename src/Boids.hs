@@ -7,6 +7,7 @@ module Boids ( World
              , isWithinViewOf
              , guideBoidToAngle
              , handleInput
+             , zoom
              ) where
 
 import Graphics.Gloss

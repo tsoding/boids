@@ -1,4 +1,4 @@
-module Boids ( World
+module Boids ( World(..)
              , Boid(..)
              , randomState
              , renderState
@@ -7,6 +7,8 @@ module Boids ( World
              , isWithinViewOf
              , guideBoidToAngle
              , handleInput
+             , zoomControl
+             , emptyState
              ) where
 
 import Data.List

@@ -180,9 +180,9 @@ renderState world = applyViewPortToPicture viewPort frame
     where frame = pictures $ map renderBoid $ worldBoids world
           viewPort = worldViewPort world
 
-nextState :: ViewPort -> Float -> World -> World
-nextState _ deltaTime world = world { worldBoids = boids
-                                    , worldGuide = guide
-                                    }
+nextState :: Float -> World -> World
+nextState deltaTime world = world { worldBoids = boids
+                                  , worldGuide = guide
+                                  }
     where boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

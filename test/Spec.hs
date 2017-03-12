@@ -6,6 +6,7 @@ import System.Exit
 
 import TestDataSpec
 import BoidsSpec
+import ViewPortTransformSpec
 
 testIsWithinView :: Test
 testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid1 boid2))
@@ -59,7 +60,7 @@ main = do results <- runTestTT $ TestList [ TestLabel "Filtering surrounding boi
                                           , TestLabel "TestData.getBoidById" testGetBoidById
                                           , TestLabel "TestData.getBoidsGroupById" testGetBoidsGroupById
                                           , TestLabel "Boids.guideBoidToAngle" testGuideBoidToAngle
-                                          , TestLabel "Boids.zoom" testZoom]
+                                          , TestLabel "ViewPortTransform.zoom" testZoom]
           if (errors results + failures results == 0)
           then exitWith ExitSuccess
           else exitWith (ExitFailure 1)

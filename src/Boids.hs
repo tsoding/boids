@@ -7,7 +7,6 @@ module Boids ( World
              , isWithinViewOf
              , guideBoidToAngle
              , handleInput
-             , zoom
              ) where
 
 import Graphics.Gloss
@@ -19,6 +18,7 @@ import System.Random
 import Control.Monad
 import Vector
 import Debug.Trace
+import ViewPortTransform
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
@@ -158,12 +158,6 @@ initialState = do boids <- replicateM 200 randomBoid
                                  , worldGuide = (0.0, 0.0)
                                  , worldViewPort = viewPortInit
                                  }
-
-zoom :: Float -> ViewPort -> ViewPort
-zoom step viewPort = viewPort {
-                       viewPortScale = max (scale + step) 0.0
-                     }
-    where scale = viewPortScale viewPort
 
 handleInput :: Event -> World -> World
 

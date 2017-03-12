@@ -1,29 +1,39 @@
-module Boids ( World
+module Boids ( World(..)
              , Boid(..)
-             , initialState
+             , randomState
              , renderState
              , nextState
              , getNearbyBoids
              , isWithinViewOf
              , guideBoidToAngle
+             , handleInput
+             , zoomControl
+             , emptyState
              ) where
 
+import Data.List
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Angle
+import Graphics.Gloss.Interface.Pure.Game
 import System.Random
 import Control.Monad
 import Vector
+import Debug.Trace
+import ViewPortTransform
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
-                   } deriving Show
+                   , worldViewPort :: ViewPort
+                   }
 
 data Boid = Boid { boidPosition :: Point
                  , boidHeading :: Float
                  , boidSteer :: Float
                  } deriving (Show, Eq, Ord)
+
+zoomSpeed = 0.05
 
 boidsSpeed = 70.0
 guideSpeed = 100.0
@@ -145,18 +155,39 @@ randomBoid = do x <- randomRIO (-600.0, 600.0)
                               , boidSteer = steer
                               }
 
-initialState :: IO World
-initialState = do boids <- replicateM 200 randomBoid
-                  return $ World { worldBoids = boids
-                                 , worldGuide = (0.0, 0.0)
-                                 }
+emptyState :: World
+emptyState = World { worldBoids = []
+                   , worldGuide = (0.0, 0.0)
+                   , worldViewPort = viewPortInit
+                   }
+
+randomState :: IO World
+randomState = do boids <- replicateM 200 randomBoid
+                 return $ emptyState { worldBoids = boids }
+
+-- TODO: take cursor position into account during zooming
+zoomControl :: Event -> World -> World
+zoomControl (EventKey (MouseButton WheelUp) Down _ _) world =
+    world { worldViewPort = zoom zoomSpeed $ worldViewPort world }
+zoomControl (EventKey (MouseButton WheelDown) Down _ _) world =
+    world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
+zoomControl _ world = world
+
+-- TODO: implement dragging around
+-- TODO: implement boids following the mouse cursor
+
+handleInput :: Event -> World -> World
+handleInput event world = foldl' (\w f -> f event world) world controllers
+    where controllers = [zoomControl]
 
 renderState :: World -> Picture
-renderState = pictures . map renderBoid . worldBoids
+renderState world = applyViewPortToPicture viewPort frame
+    where frame = pictures $ map renderBoid $ worldBoids world
+          viewPort = worldViewPort world
 
-nextState :: ViewPort -> Float -> World -> World
-nextState _ deltaTime world = world { worldBoids = boids
-                                    , worldGuide = guide
-                                    }
+nextState :: Float -> World -> World
+nextState deltaTime world = world { worldBoids = boids
+                                  , worldGuide = guide
+                                  }
     where boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
           guide = nextGuide deltaTime $ worldGuide world

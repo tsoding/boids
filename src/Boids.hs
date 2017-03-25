@@ -12,6 +12,7 @@ module Boids ( World(..)
              ) where
 
 import Data.List
+import Data.Maybe
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.Vector
@@ -26,6 +27,7 @@ import ViewPortTransform
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
                    , worldViewPort :: ViewPort
+                   , worldPrevPosition :: Maybe Point
                    }
 
 data Boid = Boid { boidPosition :: Point
@@ -159,6 +161,7 @@ emptyState :: World
 emptyState = World { worldBoids = []
                    , worldGuide = (0.0, 0.0)
                    , worldViewPort = viewPortInit
+                   , worldPrevPosition = Nothing
                    }
 
 randomState :: IO World
@@ -173,12 +176,26 @@ zoomControl (EventKey (MouseButton WheelDown) Down _ _) world =
     world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
 zoomControl _ world = world
 
--- TODO: implement dragging around
+dragControl :: Event -> World -> World
+dragControl (EventKey (MouseButton LeftButton) Down _ position) world =
+    world { worldPrevPosition = Just position }
+dragControl (EventMotion position) world = world { worldViewPort = fromMaybe viewPort draggedViewPort
+                                                 , worldPrevPosition = position <$ worldPrevPosition world
+                                                 }
+    where draggedViewPort = do prevPosition <- worldPrevPosition world
+                               let dragVector = fromPoints prevPosition position
+                               return $ viewPort { viewPortTranslate = addTwoVectors (viewPortTranslate viewPort) $ dragVector }
+          viewPort = worldViewPort world
+dragControl (EventKey (MouseButton LeftButton) Up _ _) world =
+    world { worldPrevPosition = Nothing }
+dragControl _ world = world
+
 -- TODO: implement boids following the mouse cursor
 
 handleInput :: Event -> World -> World
 handleInput event world = foldl' (\w f -> f event world) world controllers
-    where controllers = [zoomControl]
+    -- TODO: only last controller counts for some reason
+    where controllers = [zoomControl, dragControl]
 
 renderState :: World -> Picture
 renderState world = applyViewPortToPicture viewPort frame

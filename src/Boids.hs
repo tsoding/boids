@@ -193,8 +193,7 @@ dragControl _ world = world
 -- TODO: implement boids following the mouse cursor
 
 handleInput :: Event -> World -> World
-handleInput event world = foldl' (\w f -> f event world) world controllers
-    -- TODO: only last controller counts for some reason
+handleInput event world = foldl' (\w f -> f event w) world controllers
     where controllers = [zoomControl, dragControl]
 
 renderState :: World -> Picture

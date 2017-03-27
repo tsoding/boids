@@ -183,6 +183,8 @@ zoomControl (EventKey (MouseButton WheelDown) Down _ _) world =
     world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
 zoomControl _ world = world
 
+-- TODO(38bb2eed-3ee9-4ff8-b892-46645e85229c): take zoom factor into
+-- account while dragging the view
 dragControl :: Event -> World -> World
 dragControl (EventKey (MouseButton LeftButton) Down _ position) world =
     world { worldDragPosition = Just position }

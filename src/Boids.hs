@@ -24,6 +24,12 @@ import Vector
 import Debug.Trace
 import ViewPortTransform
 
+-- TODO(22ffd996-8c7f-4bfa-9166-66ddc77858eb): Navigation entity
+--
+-- Introduce a separate entity called Navigation which encapsulates
+-- the view port and the drag position. All of the functions such as
+-- zoomControl and dragControl should work only with Navigation
+-- instead of the entire World.
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
                    , worldViewPort :: ViewPort

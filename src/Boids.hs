@@ -27,7 +27,7 @@ import ViewPortTransform
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
                    , worldViewPort :: ViewPort
-                   , worldPrevPosition :: Maybe Point
+                   , worldDragPosition :: Maybe Point
                    }
 
 data Boid = Boid { boidPosition :: Point
@@ -161,7 +161,7 @@ emptyState :: World
 emptyState = World { worldBoids = []
                    , worldGuide = (0.0, 0.0)
                    , worldViewPort = viewPortInit
-                   , worldPrevPosition = Nothing
+                   , worldDragPosition = Nothing
                    }
 
 randomState :: IO World
@@ -178,16 +178,16 @@ zoomControl _ world = world
 
 dragControl :: Event -> World -> World
 dragControl (EventKey (MouseButton LeftButton) Down _ position) world =
-    world { worldPrevPosition = Just position }
+    world { worldDragPosition = Just position }
 dragControl (EventMotion position) world = world { worldViewPort = fromMaybe viewPort draggedViewPort
-                                                 , worldPrevPosition = position <$ worldPrevPosition world
+                                                 , worldDragPosition = position <$ worldDragPosition world
                                                  }
-    where draggedViewPort = do prevPosition <- worldPrevPosition world
+    where draggedViewPort = do prevPosition <- worldDragPosition world
                                let dragVector = fromPoints prevPosition position
                                return $ viewPort { viewPortTranslate = addTwoVectors (viewPortTranslate viewPort) $ dragVector }
           viewPort = worldViewPort world
 dragControl (EventKey (MouseButton LeftButton) Up _ _) world =
-    world { worldPrevPosition = Nothing }
+    world { worldDragPosition = Nothing }
 dragControl _ world = world
 
 -- TODO: implement boids following the mouse cursor

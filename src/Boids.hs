@@ -12,6 +12,7 @@ module Boids ( World(..)
              ) where
 
 import Data.List
+import Data.Maybe
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Data.Vector
@@ -23,9 +24,16 @@ import Vector
 import Debug.Trace
 import ViewPortTransform
 
+-- TODO(22ffd996-8c7f-4bfa-9166-66ddc77858eb): Navigation entity
+--
+-- Introduce a separate entity called Navigation which encapsulates
+-- the view port and the drag position. All of the functions such as
+-- zoomControl and dragControl should work only with Navigation
+-- instead of the entire World.
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
                    , worldViewPort :: ViewPort
+                   , worldDragPosition :: Maybe Point
                    }
 
 data Boid = Boid { boidPosition :: Point
@@ -159,13 +167,15 @@ emptyState :: World
 emptyState = World { worldBoids = []
                    , worldGuide = (0.0, 0.0)
                    , worldViewPort = viewPortInit
+                   , worldDragPosition = Nothing
                    }
 
 randomState :: IO World
 randomState = do boids <- replicateM 200 randomBoid
                  return $ emptyState { worldBoids = boids }
 
--- TODO: take cursor position into account during zooming
+-- TODO(cb053b98-8a4c-4f53-b5c2-6fc8e5b78999): take cursor position
+-- into account during zooming
 zoomControl :: Event -> World -> World
 zoomControl (EventKey (MouseButton WheelUp) Down _ _) world =
     world { worldViewPort = zoom zoomSpeed $ worldViewPort world }
@@ -173,12 +183,28 @@ zoomControl (EventKey (MouseButton WheelDown) Down _ _) world =
     world { worldViewPort = zoom (-zoomSpeed) $ worldViewPort world }
 zoomControl _ world = world
 
--- TODO: implement dragging around
--- TODO: implement boids following the mouse cursor
+-- TODO(38bb2eed-3ee9-4ff8-b892-46645e85229c): take zoom factor into
+-- account while dragging the view
+dragControl :: Event -> World -> World
+dragControl (EventKey (MouseButton LeftButton) Down _ position) world =
+    world { worldDragPosition = Just position }
+dragControl (EventMotion position) world = world { worldViewPort = fromMaybe viewPort draggedViewPort
+                                                 , worldDragPosition = position <$ worldDragPosition world
+                                                 }
+    where draggedViewPort = do prevPosition <- worldDragPosition world
+                               let dragVector = fromPoints prevPosition position
+                               return $ viewPort { viewPortTranslate = addTwoVectors (viewPortTranslate viewPort) $ dragVector }
+          viewPort = worldViewPort world
+dragControl (EventKey (MouseButton LeftButton) Up _ _) world =
+    world { worldDragPosition = Nothing }
+dragControl _ world = world
+
+-- TODO(38c0786d-acd8-400b-aad8-90d91ee5d05b): implement boids
+-- following the mouse cursor
 
 handleInput :: Event -> World -> World
-handleInput event world = foldl' (\w f -> f event world) world controllers
-    where controllers = [zoomControl]
+handleInput event world = foldl' (\w f -> f event w) world controllers
+    where controllers = [zoomControl, dragControl]
 
 renderState :: World -> Picture
 renderState world = applyViewPortToPicture viewPort frame

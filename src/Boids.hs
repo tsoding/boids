@@ -168,7 +168,8 @@ randomState :: IO World
 randomState = do boids <- replicateM 200 randomBoid
                  return $ emptyState { worldBoids = boids }
 
--- TODO: take cursor position into account during zooming
+-- TODO(cb053b98-8a4c-4f53-b5c2-6fc8e5b78999): take cursor position
+-- into account during zooming
 zoomControl :: Event -> World -> World
 zoomControl (EventKey (MouseButton WheelUp) Down _ _) world =
     world { worldViewPort = zoom zoomSpeed $ worldViewPort world }
@@ -190,7 +191,8 @@ dragControl (EventKey (MouseButton LeftButton) Up _ _) world =
     world { worldDragPosition = Nothing }
 dragControl _ world = world
 
--- TODO: implement boids following the mouse cursor
+-- TODO(38c0786d-acd8-400b-aad8-90d91ee5d05b): implement boids
+-- following the mouse cursor
 
 handleInput :: Event -> World -> World
 handleInput event world = foldl' (\w f -> f event w) world controllers

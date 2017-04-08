@@ -7,6 +7,7 @@ import System.Exit
 import TestDataSpec
 import BoidsSpec
 import ViewPortTransformSpec
+import NavigationSpec
 
 testIsWithinView :: Test
 testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid1 boid2))

@@ -22,6 +22,7 @@ library
                      , TestData
                      , ViewPortTransform
                      , Navigation
+                     , Navigation.Internals
   default-language:    Haskell2010
 
 executable boids-exe

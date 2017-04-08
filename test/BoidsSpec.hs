@@ -1,4 +1,4 @@
-module BoidsSpec (testGuideBoidToAngle, testZoomControl) where
+module BoidsSpec (testGuideBoidToAngle) where
 
 import Test.HUnit
 import Test.HUnit.Approx
@@ -28,32 +28,3 @@ testGuideBoidToAngle =
                                   }
                   guidedBoid = guideBoidToAngle angle testBoid
               in TestCase (assertApproxEqual message errorMargin expectedSteer $ boidSteer guidedBoid)
-
-testZoomControl :: Test
-testZoomControl =
-    TestList [ TestLabel "Wheel Up" wheelUpTestCase
-             , TestLabel "Wheel Down" wheelDownTestCase
-             , TestLabel "Unrelated event" nonWheelEventTestCase
-             ]
-    where wheelUpTestCase = generalTestCase wheelUpMessage wheelUpEvent (<)
-          wheelDownTestCase = generalTestCase wheelDownMessage wheelDownEvent (>)
-          nonWheelEventTestCase = generalTestCase nonWheelEventMessage leftClick fuzzyEquals
-
-          wheelUpMessage = "Expected zoom in on wheel up"
-          wheelDownMessage = "Expected zoom out on wheel down"
-          nonWheelEventMessage = "Expected no change in zoom on non-wheel event"
-
-          generalTestCase message event predicate =
-              let world = emptyState {
-                            worldViewPort = viewPortInit {
-                                              viewPortScale = initScale
-                                            }
-                          }
-                  initScale = 1.0
-                  zoomedWorld = zoomControl event world
-                  zoomedScale = viewPortScale $ worldViewPort $ zoomedWorld
-              in TestCase $ assertBool message $ predicate initScale zoomedScale
-
-          wheelUpEvent = EventKey (MouseButton WheelUp) Down undefined undefined
-          wheelDownEvent = EventKey (MouseButton WheelDown) Down undefined undefined
-          leftClick = EventKey (MouseButton LeftButton) undefined undefined undefined

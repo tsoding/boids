@@ -21,6 +21,7 @@ library
   exposed-modules:     Boids
                      , TestData
                      , ViewPortTransform
+                     , Navigation
   default-language:    Haskell2010
 
 executable boids-exe

@@ -33,18 +33,22 @@ zoomControl (EventKey (MouseButton WheelDown) Down _ _) navigation =
     navigation { navigationViewPort = zoom (-zoomSpeed) $ navigationViewPort navigation }
 zoomControl _ navigation = navigation
 
--- TODO(38bb2eed-3ee9-4ff8-b892-46645e85229c): take zoom factor into
--- account while dragging the view
 dragControl :: Event -> Navigation -> Navigation
 dragControl (EventKey (MouseButton LeftButton) Down _ position) navigation =
     navigation { navigationDragPosition = Just position }
-dragControl (EventMotion position) navigation = navigation { navigationViewPort = fromMaybe viewPort draggedViewPort
-                                                 , navigationDragPosition = position <$ navigationDragPosition navigation
-                                                 }
+dragControl (EventMotion position) navigation =
+    navigation { navigationViewPort = fromMaybe viewPort draggedViewPort
+               , navigationDragPosition = position <$ navigationDragPosition navigation
+               }
     where draggedViewPort = do prevPosition <- navigationDragPosition navigation
-                               let dragVector = fromPoints prevPosition position
-                               return $ viewPort { viewPortTranslate = addTwoVectors (viewPortTranslate viewPort) $ dragVector }
+                               let (dragX, dragY) = fromPoints prevPosition position
+                               return $ viewPort { viewPortTranslate = ( transX + dragX * zoomFactor
+                                                                       , transY + dragY * zoomFactor
+                                                                       )
+                                                 }
           viewPort = navigationViewPort navigation
+          zoomFactor = 1.0 / viewPortScale viewPort
+          (transX, transY) = viewPortTranslate viewPort
 dragControl (EventKey (MouseButton LeftButton) Up _ _) navigation =
     navigation { navigationDragPosition = Nothing }
 dragControl _ world = world

@@ -24,6 +24,10 @@ applyNavigationToPicture :: Navigation -> Picture -> Picture
 applyNavigationToPicture navigation picture = applyViewPortToPicture viewPort picture
     where viewPort = navigationViewPort navigation
 
+applyNavigationToPoint :: Navigation -> Point -> Point
+applyNavigationToPoint navigation p = invertViewPort viewPort p
+    where viewPort = navigationViewPort navigation
+
 -- TODO(cb053b98-8a4c-4f53-b5c2-6fc8e5b78999): take cursor position
 -- into account during zooming
 zoomControl :: Event -> Navigation -> Navigation

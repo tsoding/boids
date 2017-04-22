@@ -76,14 +76,14 @@ guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
     where direction = fromPoints (boidPosition boid) guidePoint
 
 
-isWithinViewOf :: Boid -> Boid -> Bool
-isWithinViewOf boid1 boid2 = azimuth <= viewAngle
-    where azimuth = angleVV reference (fromPoints (boidPosition boid1) (boidPosition boid2))
-          reference = unitVectorAtAngle $ boidHeading boid1
+isWithinViewOf :: Boid -> Point -> Bool
+isWithinViewOf watchingBoid observedPoint = azimuth <= viewAngle
+    where azimuth = angleVV reference (fromPoints (boidPosition watchingBoid) observedPoint)
+          reference = unitVectorAtAngle $ boidHeading watchingBoid
 
 getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
 getNearbyBoids pivotBoid proximity boids = filter isVisible boids
-    where isVisible boid = isCloseEnough boid && isWithinViewOf pivotBoid boid
+    where isVisible boid = isCloseEnough boid && isWithinViewOf pivotBoid (boidPosition boid)
           isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= proximity
 
 averageBoidsPos :: [Boid] -> Point

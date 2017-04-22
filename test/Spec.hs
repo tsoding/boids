@@ -10,15 +10,11 @@ import ViewPortTransformSpec
 import NavigationSpec
 
 testIsWithinView :: Test
-testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid1 boid2))
-    where boid1 = Boid { boidPosition = (0.0, 0.0)
-                       , boidHeading = 0.0
-                       , boidSteer = 0.0
-                       }
-          boid2 = Boid { boidPosition = (-10.0, 0.0)
-                       , boidHeading = 0.0
-                       , boidSteer = 0.0
-                       }
+testIsWithinView  = TestCase (assertBool "Seeing a boid behind me" (not $ isWithinViewOf boid (-10.0, 0.0)))
+    where boid = Boid { boidPosition = (0.0, 0.0)
+                      , boidHeading = 0.0
+                      , boidSteer = 0.0
+                      }
 
 testGetNearbyBoids :: Test
 testGetNearbyBoids = TestCase (assertEqual "Got unexpected nearest boids" (sort $ map boidPosition nearestBoids) (sort $ map boidPosition actualResult))

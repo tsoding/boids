@@ -23,6 +23,7 @@ library
                      , ViewPortTransform
                      , Navigation
                      , Navigation.Internals
+                     , Style
   default-language:    Haskell2010
 
 executable boids-exe

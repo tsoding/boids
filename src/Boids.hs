@@ -25,6 +25,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import ViewPortTransform
 import Vector
 import Navigation
+import Style
 
 data World = World { worldBoids :: [Boid]
                    , worldGuide :: Point
@@ -49,7 +50,9 @@ distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
           dy = y2 - y1
 
 renderBoid :: Boid -> Picture
-renderBoid boid = translate x y $ rotate (-heading) $ pictures [circle (separationDistance / 2.0), polygon ps]
+renderBoid boid = translate x y $ rotate (-heading) $ pictures [ circle (separationDistance / 2.0)
+                                                               , color boidColor $ polygon ps
+                                                               ]
     where ps = [ (-10.0, 10.0)
                , (20.0, 0.0)
                , (-10.0, -10.0)
@@ -163,7 +166,7 @@ emptyState = World { worldBoids = []
                    }
 
 randomState :: IO World
-randomState = do boids <- replicateM 50 randomBoid
+randomState = do boids <- replicateM 100 randomBoid
                  return $ emptyState { worldBoids = boids }
 
 

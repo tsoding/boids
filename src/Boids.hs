@@ -40,10 +40,11 @@ data Boid = Boid { boidPosition :: Point
 boidsSpeed = 70.0
 guideSpeed = 100.0
 separationDistance = 10.0
-alignmentDistance = 30.0
+alignmentDistance = 20.0
 cohesionDistance = 200.0
 followCursorDistance = 500.0
 viewAngle = pi / 4 * 3
+steerVelocity = 2.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -152,7 +153,7 @@ resetBoidsSteer boids = map resetBoid boids
 nextBoid :: Float -> Boid -> Boid
 nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
                                                 , y + deltaTime * sin heading * boidsSpeed)
-                               , boidHeading = heading + steer * deltaTime
+                               , boidHeading = heading + steerVelocity * steer * deltaTime
                                }
     where (x, y) = boidPosition boid
           heading = boidHeading boid
@@ -163,8 +164,8 @@ nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
                                        , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
-randomBoid = do x <- randomRIO (-600.0, 600.0)
-                y <- randomRIO (-600.0, 600.0)
+randomBoid = do x <- randomRIO (-1200.0, 1200.0)
+                y <- randomRIO (-1200.0, 1200.0)
                 heading <- randomRIO (0.0, 2 * pi)
                 steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)
@@ -179,7 +180,7 @@ emptyState = World { worldBoids = []
                    }
 
 randomState :: IO World
-randomState = do boids <- replicateM 100 randomBoid
+randomState = do boids <- replicateM 200 randomBoid
                  return $ emptyState { worldBoids = boids }
 
 handleInput :: Event -> World -> World

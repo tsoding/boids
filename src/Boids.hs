@@ -28,8 +28,8 @@ import Navigation
 import Style
 
 data World = World { worldBoids :: [Boid]
-                   , worldGuide :: Point
                    , worldNavigation :: Navigation
+                   , worldMousePosition :: Maybe Point
                    }
 
 data Boid = Boid { boidPosition :: Point
@@ -40,9 +40,11 @@ data Boid = Boid { boidPosition :: Point
 boidsSpeed = 70.0
 guideSpeed = 100.0
 separationDistance = 10.0
-alignmentDistance = 30.0
+alignmentDistance = 20.0
 cohesionDistance = 200.0
+followCursorDistance = 500.0
 viewAngle = pi / 4 * 3
+steerVelocity = 2.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -76,15 +78,21 @@ guideBoidToPoint guidePoint boid = guideBoidToVector direction boid
     where direction = fromPoints (boidPosition boid) guidePoint
 
 
-isWithinViewOf :: Boid -> Boid -> Bool
-isWithinViewOf boid1 boid2 = azimuth <= viewAngle
-    where azimuth = angleVV reference (fromPoints (boidPosition boid1) (boidPosition boid2))
-          reference = unitVectorAtAngle $ boidHeading boid1
+isWithinViewOf :: Boid -> Point -> Bool
+isWithinViewOf watchingBoid observedPoint = azimuth <= viewAngle
+    where azimuth = angleVV reference (fromPoints (boidPosition watchingBoid) observedPoint)
+          reference = unitVectorAtAngle $ boidHeading watchingBoid
+
+
+isCloseEnough :: Boid -> Point -> Float -> Bool
+isCloseEnough pivotBoid p proximity = distance (boidPosition pivotBoid) p <= proximity
+
+isVisibleFor :: Boid -> Point -> Float -> Bool
+isVisibleFor pivotBoid p proximity = isCloseEnough pivotBoid p proximity && isWithinViewOf pivotBoid p
 
 getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
-getNearbyBoids pivotBoid proximity boids = filter isVisible boids
-    where isVisible boid = isCloseEnough boid && isWithinViewOf pivotBoid boid
-          isCloseEnough boid = distance (boidPosition pivotBoid) (boidPosition boid) <= proximity
+getNearbyBoids pivotBoid proximity boids =
+    filter (\boid -> isVisibleFor pivotBoid (boidPosition boid) proximity) boids
 
 averageBoidsPos :: [Boid] -> Point
 averageBoidsPos [] = error "Empty list in averageBoidsPos"
@@ -132,6 +140,12 @@ alignmentRule boids = boidsProduct boids alignBoid
 cohesionRule :: [Boid] -> [Boid]
 cohesionRule boids = boidsProduct boids stickBoid
 
+followPointRule :: Point -> [Boid] -> [Boid]
+followPointRule p boids = map (\boid -> if isCloseEnough boid p followCursorDistance
+                                        then guideBoidToPoint p boid
+                                        else boid)
+                          boids
+
 resetBoidsSteer :: [Boid] -> [Boid]
 resetBoidsSteer boids = map resetBoid boids
     where resetBoid boid = boid { boidSteer = 0.0 }
@@ -139,7 +153,7 @@ resetBoidsSteer boids = map resetBoid boids
 nextBoid :: Float -> Boid -> Boid
 nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
                                                 , y + deltaTime * sin heading * boidsSpeed)
-                               , boidHeading = heading + steer * deltaTime
+                               , boidHeading = heading + steerVelocity * steer * deltaTime
                                }
     where (x, y) = boidPosition boid
           heading = boidHeading boid
@@ -150,8 +164,8 @@ nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
                                        , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
-randomBoid = do x <- randomRIO (-600.0, 600.0)
-                y <- randomRIO (-600.0, 600.0)
+randomBoid = do x <- randomRIO (-1200.0, 1200.0)
+                y <- randomRIO (-1200.0, 1200.0)
                 heading <- randomRIO (0.0, 2 * pi)
                 steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)
@@ -161,21 +175,24 @@ randomBoid = do x <- randomRIO (-600.0, 600.0)
 
 emptyState :: World
 emptyState = World { worldBoids = []
-                   , worldGuide = (0.0, 0.0)
                    , worldNavigation = navigationInit
+                   , worldMousePosition = Nothing
                    }
 
 randomState :: IO World
-randomState = do boids <- replicateM 100 randomBoid
+randomState = do boids <- replicateM 200 randomBoid
                  return $ emptyState { worldBoids = boids }
 
-
--- TODO(38c0786d-acd8-400b-aad8-90d91ee5d05b): implement boids
--- following the mouse cursor
-
 handleInput :: Event -> World -> World
-handleInput event world = world { worldNavigation = navigationInput event navigation }
+handleInput event world =
+    world { worldNavigation = navigationInput event navigation
+          , worldMousePosition = case event of
+                                   (EventMotion position) -> Just position
+                                   _                      -> mousePosition
+          }
     where navigation = worldNavigation world
+          boids = worldBoids world
+          mousePosition = worldMousePosition world
 
 renderState :: World -> Picture
 renderState world = applyNavigationToPicture navigation frame
@@ -183,8 +200,9 @@ renderState world = applyNavigationToPicture navigation frame
           navigation = worldNavigation world
 
 nextState :: Float -> World -> World
-nextState deltaTime world = world { worldBoids = boids
-                                  , worldGuide = guide
+nextState deltaTime world = world { worldBoids = fromMaybe boids nextBoids
                                   }
-    where boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
-          guide = nextGuide deltaTime $ worldGuide world
+    where nextBoids = do guidePosition <- (applyNavigationToPoint navigation) <$> (worldMousePosition world)
+                         return $ followPointRule guidePosition boids
+          boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
+          navigation = worldNavigation world

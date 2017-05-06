@@ -30,13 +30,11 @@ applyNavigationToPoint :: Navigation -> Point -> Point
 applyNavigationToPoint navigation p = invertViewPort viewPort p
     where viewPort = navigationViewPort navigation
 
--- TODO(cb053b98-8a4c-4f53-b5c2-6fc8e5b78999): take cursor position
--- into account during zooming
 zoomControl :: Event -> Navigation -> Navigation
-zoomControl (EventKey (MouseButton WheelUp) Down _ (x, y)) navigation =
-    navigation { navigationViewPort = zoom zoomSpeed $ navigationViewPort navigation }
-zoomControl (EventKey (MouseButton WheelDown) Down _ _) navigation =
-    navigation { navigationViewPort = zoom (-zoomSpeed) $ navigationViewPort navigation }
+zoomControl (EventKey (MouseButton WheelUp) Down _ mouseCursor) navigation =
+    navigation { navigationViewPort = zoomWithPivot zoomSpeed mouseCursor $ navigationViewPort navigation }
+zoomControl (EventKey (MouseButton WheelDown) Down _ mouseCursor) navigation =
+    navigation { navigationViewPort = zoomWithPivot (-zoomSpeed) mouseCursor $ navigationViewPort navigation }
 zoomControl _ navigation = navigation
 
 dragControl :: Event -> Navigation -> Navigation

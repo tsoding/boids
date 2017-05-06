@@ -180,7 +180,7 @@ emptyState = World { worldBoids = []
                    }
 
 randomState :: IO World
-randomState = do boids <- replicateM 200 randomBoid
+randomState = do boids <- replicateM 100 randomBoid
                  return $ emptyState { worldBoids = boids }
 
 handleInput :: Event -> World -> World

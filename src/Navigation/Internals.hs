@@ -8,6 +8,7 @@ import Graphics.Gloss.Interface.Pure.Game
 
 import ViewPortTransform
 import Vector
+import Debug.Trace
 
 data Navigation = Navigation { navigationViewPort :: ViewPort
                              , navigationDragPosition :: Maybe Point
@@ -31,7 +32,7 @@ applyNavigationToPoint navigation p = invertViewPort viewPort p
 -- TODO(cb053b98-8a4c-4f53-b5c2-6fc8e5b78999): take cursor position
 -- into account during zooming
 zoomControl :: Event -> Navigation -> Navigation
-zoomControl (EventKey (MouseButton WheelUp) Down _ _) navigation =
+zoomControl (EventKey (MouseButton WheelUp) Down _ (x, y)) navigation =
     navigation { navigationViewPort = zoom zoomSpeed $ navigationViewPort navigation }
 zoomControl (EventKey (MouseButton WheelDown) Down _ _) navigation =
     navigation { navigationViewPort = zoom (-zoomSpeed) $ navigationViewPort navigation }
@@ -46,10 +47,7 @@ dragControl (EventMotion position) navigation =
                }
     where draggedViewPort = do prevPosition <- navigationDragPosition navigation
                                let (dragX, dragY) = fromPoints prevPosition position
-                               return $ viewPort { viewPortTranslate = ( transX + dragX * zoomFactor
-                                                                       , transY + dragY * zoomFactor
-                                                                       )
-                                                 }
+                               return $ translateViewPort (dragX * zoomFactor, dragY * zoomFactor) viewPort
           viewPort = navigationViewPort navigation
           zoomFactor = 1.0 / viewPortScale viewPort
           (transX, transY) = viewPortTranslate viewPort

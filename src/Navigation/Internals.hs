@@ -3,6 +3,7 @@ import Data.List
 import Data.Maybe
 
 import Graphics.Gloss
+import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Data.ViewPort
 import Graphics.Gloss.Interface.Pure.Game
 
@@ -46,8 +47,8 @@ dragControl (EventMotion position) navigation =
                , navigationDragPosition = position <$ navigationDragPosition navigation
                }
     where draggedViewPort = do prevPosition <- navigationDragPosition navigation
-                               let (dragX, dragY) = fromPoints prevPosition position
-                               return $ translateViewPort (dragX * zoomFactor, dragY * zoomFactor) viewPort
+                               let dragVector = fromPoints prevPosition position
+                               return $ translateViewPort (mulSV zoomFactor dragVector) $ viewPort
           viewPort = navigationViewPort navigation
           zoomFactor = 1.0 / viewPortScale viewPort
           (transX, transY) = viewPortTranslate viewPort

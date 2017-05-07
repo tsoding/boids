@@ -38,6 +38,6 @@ testZoomControl =
                   zoomedScale = viewPortScale $ navigationViewPort $ zoomedNavigation
               in TestCase $ assertBool message $ predicate initScale zoomedScale
 
-          wheelUpEvent = EventKey (MouseButton WheelUp) Down undefined undefined
-          wheelDownEvent = EventKey (MouseButton WheelDown) Down undefined undefined
+          wheelUpEvent = EventKey (MouseButton WheelUp) Down undefined (0.0, 0.0)
+          wheelDownEvent = EventKey (MouseButton WheelDown) Down undefined (0.0, 0.0)
           leftClick = EventKey (MouseButton LeftButton) undefined undefined undefined

@@ -1,21 +1,29 @@
-# Stolen from https://github.com/Minoru/hakyll-convert/blob/05a3e3f4080b9161ff396b16dd20732e2ab0637a/.travis.yml
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
 
 # Use new container infrastructure to enable caching
 sudo: false
 
-# Choose a lightweight base image; we provide our own build tools.
-language: c
+# Do not choose a language; we provide our own build tools.
+language: generic
 
-# GHC depends on GMP. You can add other dependencies here as well.
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
+
+# Ensure necessary system libraries are present
 addons:
   apt:
     packages:
-    - libgmp-dev
-
-# The different configurations we want to test. You could also do things like
-# change flags or use --stack-yaml to point to a different file.
-env:
-- ARGS=""
+      - libgmp-dev
 
 before_install:
 # Download and unpack the stack executable
@@ -23,12 +31,10 @@ before_install:
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
-# This line does all of the work: installs GHC if necessary, build the library,
-# executables, and test suites, and runs the test suites. --no-terminal works
-# around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test --haddock
+install:
+# Build dependencies
+- stack --no-terminal --install-ghc test --only-dependencies
 
-# Caching so the next build will be fast too.
-cache:
-  directories:
-  - $HOME/.stack
+script:
+# Build the package, its tests, and its docs and run the tests
+- stack --no-terminal test --haddock --no-haddock-deps

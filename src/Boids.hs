@@ -37,24 +37,39 @@ data Boid = Boid { boidPosition :: Point
                  , boidSteer :: Float
                  } deriving (Show, Eq, Ord)
 
-boidsSpeed = 70.0
+enableDebugLayer = False
+boidsSpeed = 100.0
 guideSpeed = 100.0
 separationDistance = 10.0
-alignmentDistance = 20.0
-cohesionDistance = 200.0
+alignmentDistance = 100.0
+cohesionDistance = 150.0
 followCursorDistance = 500.0
-viewAngle = pi / 4 * 3
-steerVelocity = 2.0
+viewAngle = pi / 6 * 5
+steerVelocity = 3.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
     where dx = x2 - x1
           dy = y2 - y1
 
+debugViewAngle :: [Picture]
+debugViewAngle = [ color debugViewAngleColor $ line [(0.0, 0.0), mulSV 100.0 $ unitVectorAtAngle viewAngle]
+                 , color debugViewAngleColor $ line [(0.0, 0.0), mulSV 100.0 $ unitVectorAtAngle (-viewAngle)]
+                 ]
+
+debugCircles :: [Picture]
+debugCircles = [ color alignmentDebugCircleColor $ circle alignmentDistance
+               , color separationDebugCircleColor $ circle separationDistance
+               , color cohesionDebugCircleColor $ circle cohesionDistance
+               ]
+
+debugLayer :: [Picture]
+debugLayer = if enableDebugLayer
+             then debugViewAngle ++ debugCircles
+             else []
+
 renderBoid :: Boid -> Picture
-renderBoid boid = translate x y $ rotate (-heading) $ pictures [ circle (separationDistance / 2.0)
-                                                               , color boidColor $ polygon ps
-                                                               ]
+renderBoid boid = translate x y $ rotate (-heading) $ pictures $ [ color boidColor $ polygon ps ] ++ debugLayer
     where ps = [ (-10.0, 10.0)
                , (20.0, 0.0)
                , (-10.0, -10.0)

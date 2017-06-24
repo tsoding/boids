@@ -111,9 +111,9 @@ getNearbyBoids :: Boid -> Float -> [Boid] -> [Boid]
 getNearbyBoids pivotBoid proximity boids =
     filter (\boid -> isVisibleFor pivotBoid (boidPosition boid) proximity) boids
 
-averageBoidsPos :: [Boid] -> Point
-averageBoidsPos [] = error "Empty list in averageBoidsPos"
-averageBoidsPos boids = (sum xs / n, sum ys / n)
+averageBoidsPos :: [Boid] -> Maybe Point
+averageBoidsPos [] = Nothing
+averageBoidsPos boids = Just (sum xs / n, sum ys / n)
     where (xs, ys) = unzip $ map boidPosition boids
           n = fromIntegral $ length boids
 
@@ -123,11 +123,11 @@ averageBoidsHeading boids = Just ((sum $ map boidHeading boids) / n)
     where n = fromIntegral $ length boids
 
 separateBoid :: Boid -> [Boid] -> Boid
-separateBoid boid otherBoids = case nearBoids of
-                                 [] -> boid
-                                 _ -> guideBoidToVector escapeDirection boid
+separateBoid boid otherBoids = fromMaybe boid separatedBoid
     where nearBoids = getNearbyBoids boid separationDistance otherBoids
-          escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
+          separatedBoid = do averagePosition <- averageBoidsPos nearBoids
+                             let escapeDirection = fromPoints averagePosition (boidPosition boid)
+                             return $ guideBoidToVector escapeDirection boid
 
 alignBoid :: Boid -> [Boid] -> Boid
 alignBoid boid otherBoids = fromMaybe boid guidedBoid
@@ -136,11 +136,10 @@ alignBoid boid otherBoids = fromMaybe boid guidedBoid
                           return $ guideBoidToAngle targetHeading boid
 
 stickBoid :: Boid -> [Boid] -> Boid
-stickBoid boid otherBoids = case nearBoids of
-                              [] -> boid
-                              _ -> guideBoidToPoint targetPoint boid
+stickBoid boid otherBoids = fromMaybe boid stickedBoid
     where nearBoids = getNearbyBoids boid cohesionDistance otherBoids
-          targetPoint = averageBoidsPos nearBoids
+          stickedBoid = do targetPoint <- averageBoidsPos nearBoids
+                           return $ guideBoidToPoint targetPoint boid
 
 boidsProduct :: [Boid] -> (Boid -> [Boid] -> Boid) -> [Boid]
 boidsProduct boids f = [ f boid $ excludedBoids i | (i, boid) <- indexedBoids ]

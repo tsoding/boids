@@ -40,14 +40,14 @@ data Boid = Boid { boidPosition :: Point
 
 worldSize = 1200.0
 enableDebugLayer = False
-boidsSpeed = 100.0
+boidsSpeed = 150.0
 guideSpeed = 100.0
 separationDistance = 10.0
 alignmentDistance = 100.0
 cohesionDistance = 150.0
 followCursorDistance = 500.0
 viewAngle = pi / 6 * 5
-steerVelocity = 3.0
+steerVelocity = 4.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)

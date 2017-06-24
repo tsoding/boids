@@ -12,6 +12,7 @@ module Boids ( World(..)
 
 import Data.List
 import Data.Maybe
+import Data.Fixed
 import System.Random
 import Control.Monad
 import Debug.Trace
@@ -37,6 +38,7 @@ data Boid = Boid { boidPosition :: Point
                  , boidSteer :: Float
                  } deriving (Show, Eq, Ord)
 
+worldSize = 1200.0
 enableDebugLayer = False
 boidsSpeed = 100.0
 guideSpeed = 100.0
@@ -165,9 +167,14 @@ resetBoidsSteer :: [Boid] -> [Boid]
 resetBoidsSteer boids = map resetBoid boids
     where resetBoid boid = boid { boidSteer = 0.0 }
 
+
+worldWrapPoint :: Point -> Point
+worldWrapPoint (x, y) = ( mod' (x + worldSize) (2 * worldSize) - worldSize
+                        , mod' (y + worldSize) (2 * worldSize) - worldSize)
+
 nextBoid :: Float -> Boid -> Boid
-nextBoid deltaTime boid = boid { boidPosition = ( x + deltaTime * cos heading * boidsSpeed
-                                                , y + deltaTime * sin heading * boidsSpeed)
+nextBoid deltaTime boid = boid { boidPosition = worldWrapPoint ( x + deltaTime * cos heading * boidsSpeed
+                                                               , y + deltaTime * sin heading * boidsSpeed)
                                , boidHeading = heading + steerVelocity * steer * deltaTime
                                }
     where (x, y) = boidPosition boid
@@ -179,8 +186,8 @@ nextGuide deltaTime (guideX, guideY) = ( guideX + guideSpeed * deltaTime
                                        , guideY + guideSpeed * deltaTime)
 
 randomBoid :: IO Boid
-randomBoid = do x <- randomRIO (-1200.0, 1200.0)
-                y <- randomRIO (-1200.0, 1200.0)
+randomBoid = do x <- randomRIO (-worldSize, worldSize)
+                y <- randomRIO (-worldSize, worldSize)
                 heading <- randomRIO (0.0, 2 * pi)
                 steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)

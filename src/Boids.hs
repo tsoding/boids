@@ -15,6 +15,7 @@ import Data.Maybe
 import Data.Fixed
 import System.Random
 import Control.Monad
+import Control.Applicative
 import Debug.Trace
 
 import Graphics.Gloss
@@ -42,12 +43,12 @@ worldSize = 1200.0
 enableDebugLayer = False
 boidsSpeed = 150.0
 guideSpeed = 100.0
-separationDistance = 10.0
-alignmentDistance = 100.0
+separationDistance = 20.0
+alignmentDistance = 150.0
 cohesionDistance = 150.0
 followCursorDistance = 500.0
 viewAngle = pi / 6 * 5
-steerVelocity = 4.0
+steerVelocity = 2.0
 
 distance :: Point -> Point -> Float
 distance (x1, y1) (x2, y2) = sqrt (dx * dx + dy * dy)
@@ -117,11 +118,13 @@ averageBoidsPos boids = Just (sum xs / n, sum ys / n)
     where (xs, ys) = unzip $ map boidPosition boids
           n = fromIntegral $ length boids
 
+averageHeading :: [Float] -> Maybe Float
+averageHeading [] = Nothing
+averageHeading headings = Just $ atan2 (sum (map sin headings) / n) (sum (map cos headings) / n)
+    where n = fromIntegral $ length headings
+
 averageBoidsHeading :: [Boid] -> Maybe Float
-averageBoidsHeading [] = Nothing
-averageBoidsHeading boids = Just $ atan2 (sum (map sin headings) / n) (sum (map cos headings) / n)
-    where n = fromIntegral $ length boids
-          headings = map boidHeading boids
+averageBoidsHeading boids = averageHeading $ map boidHeading boids
 
 separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = fromMaybe boid separatedBoid
@@ -142,6 +145,39 @@ stickBoid boid otherBoids = fromMaybe boid stickedBoid
           stickedBoid = do targetPoint <- averageBoidsPos nearBoids
                            return $ guideBoidToPoint targetPoint boid
 
+
+shyAway :: Boid -> Boid -> Boid
+shyAway shyBoid scaryBoid = guideBoidToAngle heading shyBoid
+    where heading = argV $ fromPoints (boidPosition scaryBoid) (boidPosition shyBoid)
+
+adjustBoid :: Boid -> [Boid] -> Boid
+adjustBoid boid otherBoids = fromMaybe boid
+                             $ shiedAwayBoid <|> interestedBoid
+    where shiedAwayBoid :: Maybe Boid
+          shiedAwayBoid = shyAway boid <$> tooCloseBoid
+
+          tooCloseBoid :: Maybe Boid
+          tooCloseBoid = listToMaybe
+                         $ getNearbyBoids boid separationDistance otherBoids
+
+          alignmentHeading :: Maybe Float
+          alignmentHeading = averageBoidsHeading
+                             $ getNearbyBoids boid alignmentDistance otherBoids
+
+          cohesionHeading :: Maybe Float
+          cohesionHeading = (\swarmPos -> argV $ fromPoints (boidPosition boid) swarmPos )
+                            <$> ( averageBoidsPos
+                                $ getNearbyBoids boid cohesionDistance otherBoids
+                                )
+
+          interestingDirection :: Maybe Float
+          interestingDirection = (liftA2 (\c a -> averageHeading [a, a, a, c]) cohesionHeading alignmentHeading >>= id)
+                                 <|> alignmentHeading
+                                 <|> cohesionHeading
+
+          interestedBoid :: Maybe Boid
+          interestedBoid = (\a -> guideBoidToAngle a boid) <$> interestingDirection
+
 boidsProduct :: [Boid] -> (Boid -> [Boid] -> Boid) -> [Boid]
 boidsProduct boids f = [ f boid $ excludedBoids i | (i, boid) <- indexedBoids ]
     where indexedBoids = zip [1..] boids
@@ -155,6 +191,9 @@ alignmentRule boids = boidsProduct boids alignBoid
 
 cohesionRule :: [Boid] -> [Boid]
 cohesionRule boids = boidsProduct boids stickBoid
+
+combinedRule :: [Boid] -> [Boid]
+combinedRule boids = boidsProduct boids adjustBoid
 
 followPointRule :: Point -> [Boid] -> [Boid]
 followPointRule p boids = map (\boid -> if isCloseEnough boid p followCursorDistance
@@ -174,10 +213,11 @@ worldWrapPoint (x, y) = ( mod' (x + worldSize) (2 * worldSize) - worldSize
 nextBoid :: Float -> Boid -> Boid
 nextBoid deltaTime boid = boid { boidPosition = worldWrapPoint ( x + deltaTime * cos heading * boidsSpeed
                                                                , y + deltaTime * sin heading * boidsSpeed)
-                               , boidHeading = heading + steerVelocity * steer * deltaTime
+                               , boidHeading = atan2 (sin nextHeading) (cos nextHeading)
                                }
     where (x, y) = boidPosition boid
           heading = boidHeading boid
+          nextHeading = heading + steerVelocity * steer * deltaTime
           steer = boidSteer boid
 
 nextGuide :: Float -> Point -> Point
@@ -188,10 +228,10 @@ randomBoid :: IO Boid
 randomBoid = do x <- randomRIO (-worldSize, worldSize)
                 y <- randomRIO (-worldSize, worldSize)
                 heading <- randomRIO (0.0, 2 * pi)
-                steer <- randomRIO (0.0, 2 * pi)
+                -- steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)
                               , boidHeading = heading
-                              , boidSteer = steer
+                              , boidSteer = 0.0
                               }
 
 emptyState :: World
@@ -201,7 +241,7 @@ emptyState = World { worldBoids = []
                    }
 
 randomState :: IO World
-randomState = do boids <- replicateM 100 randomBoid
+randomState = do boids <- replicateM 300 randomBoid
                  return $ emptyState { worldBoids = boids }
 
 handleInput :: Event -> World -> World
@@ -221,9 +261,7 @@ renderState world = applyNavigationToPicture navigation frame
           navigation = worldNavigation world
 
 nextState :: Float -> World -> World
-nextState deltaTime world = world { worldBoids = fromMaybe boids nextBoids
+nextState deltaTime world = world { worldBoids = boids
                                   }
-    where nextBoids = do guidePosition <- (applyNavigationToPoint navigation) <$> (worldMousePosition world)
-                         return $ followPointRule guidePosition boids
-          boids = separationRule $ alignmentRule $ cohesionRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
+    where boids = combinedRule $ resetBoidsSteer $ map (nextBoid deltaTime) $ worldBoids world
           navigation = worldNavigation world

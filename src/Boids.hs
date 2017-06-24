@@ -117,9 +117,9 @@ averageBoidsPos boids = (sum xs / n, sum ys / n)
     where (xs, ys) = unzip $ map boidPosition boids
           n = fromIntegral $ length boids
 
-averageBoidsHeading :: [Boid] -> Float
-averageBoidsHeading [] = error "Empty list in averageBoidsHeading"
-averageBoidsHeading boids = (sum $ map boidHeading boids) / n
+averageBoidsHeading :: [Boid] -> Maybe Float
+averageBoidsHeading [] = Nothing
+averageBoidsHeading boids = Just ((sum $ map boidHeading boids) / n)
     where n = fromIntegral $ length boids
 
 separateBoid :: Boid -> [Boid] -> Boid
@@ -130,11 +130,10 @@ separateBoid boid otherBoids = case nearBoids of
           escapeDirection = fromPoints (averageBoidsPos nearBoids) (boidPosition boid)
 
 alignBoid :: Boid -> [Boid] -> Boid
-alignBoid boid otherBoids = case nearBoids of
-                              [] -> boid
-                              _ -> guideBoidToAngle targetHeading boid
+alignBoid boid otherBoids = fromMaybe boid guidedBoid
     where nearBoids = getNearbyBoids boid alignmentDistance otherBoids
-          targetHeading = averageBoidsHeading nearBoids
+          guidedBoid = do targetHeading <- averageBoidsHeading nearBoids
+                          return $ guideBoidToAngle targetHeading boid
 
 stickBoid :: Boid -> [Boid] -> Boid
 stickBoid boid otherBoids = case nearBoids of

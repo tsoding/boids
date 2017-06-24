@@ -132,7 +132,7 @@ alignBoid boid otherBoids = case nearBoids of
                               [] -> boid
                               _ -> guideBoidToAngle targetHeading boid
     where nearBoids = getNearbyBoids boid alignmentDistance otherBoids
-          targetHeading = averageBoidsHeading otherBoids
+          targetHeading = averageBoidsHeading nearBoids
 
 stickBoid :: Boid -> [Boid] -> Boid
 stickBoid boid otherBoids = case nearBoids of

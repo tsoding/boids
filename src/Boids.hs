@@ -119,8 +119,9 @@ averageBoidsPos boids = Just (sum xs / n, sum ys / n)
 
 averageBoidsHeading :: [Boid] -> Maybe Float
 averageBoidsHeading [] = Nothing
-averageBoidsHeading boids = Just ((sum $ map boidHeading boids) / n)
+averageBoidsHeading boids = Just $ atan2 (sum (map sin headings) / n) (sum (map cos headings) / n)
     where n = fromIntegral $ length boids
+          headings = map boidHeading boids
 
 separateBoid :: Boid -> [Boid] -> Boid
 separateBoid boid otherBoids = fromMaybe boid separatedBoid

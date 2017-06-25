@@ -229,10 +229,10 @@ randomBoid :: IO Boid
 randomBoid = do x <- randomRIO (-worldSize, worldSize)
                 y <- randomRIO (-worldSize, worldSize)
                 heading <- randomRIO (0.0, 2 * pi)
-                -- steer <- randomRIO (0.0, 2 * pi)
+                steer <- randomRIO (0.0, 2 * pi)
                 return $ Boid { boidPosition = (x, y)
                               , boidHeading = heading
-                              , boidSteer = 0.0
+                              , boidSteer = steer
                               }
 
 emptyState :: World

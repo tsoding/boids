@@ -186,6 +186,7 @@ boidsProduct boids f = [ f boid $ excludedBoids i | (i, boid) <- indexedBoids ]
 separationRule :: [Boid] -> [Boid]
 separationRule boids = boidsProduct boids separateBoid
 
+-- TODO: refactor out old rule
 alignmentRule :: [Boid] -> [Boid]
 alignmentRule boids = boidsProduct boids alignBoid
 

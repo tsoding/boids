@@ -261,7 +261,7 @@ renderState world = applyNavigationToPicture navigation frame
     where frame = pictures $ map renderBoid $ worldBoids world
           navigation = worldNavigation world
 
--- TODO: recover broken follow cursor feature
+-- TODO(#68): recover broken follow cursor feature
 nextState :: Float -> World -> World
 nextState deltaTime world = world { worldBoids = boids
                                   }

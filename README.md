@@ -4,7 +4,7 @@
 
 http://www.red3d.com/cwr/boids/
 
-![boids](http://i.imgur.com/0cLR5Ix.png)
+![boids](https://i.imgur.com/KuUu56V.gif)
 
 ## Usage
 
